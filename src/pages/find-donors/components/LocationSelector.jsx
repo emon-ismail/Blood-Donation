@@ -2,49 +2,34 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
+import { allDistricts } from '../../../data/districts';
+import { getUpazilasByDistrict } from '../../../data/upazilas';
+import { useLanguage } from '../../../contexts/LanguageContext';
 
 const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode }) => {
+  const { language } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [filteredUpazilas, setFilteredUpazilas] = useState([]);
 
-  const districts = [
-    { value: 'dhaka', label: 'ঢাকা' },
-    { value: 'chittagong', label: 'চট্টগ্রাম' },
-    { value: 'sylhet', label: 'সিলেট' },
-    { value: 'rajshahi', label: 'রাজশাহী' },
-    { value: 'khulna', label: 'খুলনা' },
-    { value: 'barisal', label: 'বরিশাল' },
-    { value: 'rangpur', label: 'রংপুর' },
-    { value: 'mymensingh', label: 'ময়মনসিংহ' }
-  ];
-
-  const upazilas = {
-    dhaka: [
-      { value: 'dhanmondi', label: 'ধানমন্ডি' },
-      { value: 'gulshan', label: 'গুলশান' },
-      { value: 'uttara', label: 'উত্তরা' },
-      { value: 'mirpur', label: 'মিরপুর' },
-      { value: 'wari', label: 'ওয়ারী' }
-    ],
-    chittagong: [
-      { value: 'agrabad', label: 'আগ্রাবাদ' },
-      { value: 'nasirabad', label: 'নাসিরাবাদ' },
-      { value: 'pahartali', label: 'পাহাড়তলী' }
-    ],
-    sylhet: [
-      { value: 'zindabazar', label: 'জিন্দাবাজার' },
-      { value: 'ambarkhana', label: 'আম্বরখানা' }
-    ]
-  };
+  // Use all 64 districts from districts data
+  const districts = allDistricts.map(district => ({
+    value: district.en.toLowerCase().replace(/[^a-z0-9]/g, ''),
+    label: language === 'bn' ? district.bn : district.en
+  }));
 
   useEffect(() => {
-    if (selectedDistrict && upazilas?.[selectedDistrict]) {
-      setFilteredUpazilas(upazilas?.[selectedDistrict]);
+    if (selectedDistrict) {
+      const upazilaNames = getUpazilasByDistrict(selectedDistrict, language);
+      const upazilaOptions = upazilaNames.map(name => ({
+        value: name.toLowerCase().replace(/[^a-z0-9]/g, ''),
+        label: name
+      }));
+      setFilteredUpazilas(upazilaOptions);
     } else {
       setFilteredUpazilas([]);
     }
-  }, [selectedDistrict]);
+  }, [selectedDistrict, language]);
 
   const handleCurrentLocation = () => {
     if (navigator.geolocation) {
@@ -67,8 +52,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
 
   return (
     <div className="bg-white rounded-xl shadow-brand p-6 mb-6">
-      <h2 className="text-xl font-bengali font-semibold text-text-primary mb-4">
-        এলাকা নির্বাচন করুন
+      <h2 className={`text-xl font-semibold text-text-primary mb-4 ${language === 'bn' ? 'font-bengali' : ''}`}>
+        {language === 'bn' ? 'এলাকা নির্বাচন করুন' : 'Select Location'}
       </h2>
       {/* Current Location Button */}
       <div className="mb-4">
@@ -79,8 +64,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
           }`}
         >
           <Icon name="MapPin" size={20} color="var(--color-primary)" />
-          <span className="font-bengali font-medium text-primary">
-            বর্তমান অবস্থান ব্যবহার করুন
+          <span className={`font-medium text-primary ${language === 'bn' ? 'font-bengali' : ''}`}>
+            {language === 'bn' ? 'বর্তমান অবস্থান ব্যবহার করুন' : 'Use Current Location'}
           </span>
         </button>
       </div>
@@ -88,15 +73,15 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-primary font-bengali mb-2">
-              জেলা
+            <label className={`block text-sm font-medium text-text-primary mb-2 ${language === 'bn' ? 'font-bengali' : ''}`}>
+              {language === 'bn' ? 'জেলা' : 'District'}
             </label>
             <select
               value={selectedDistrict}
               onChange={(e) => setSelectedDistrict(e.target.value)}
               className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             >
-              <option value="">জেলা নির্বাচন করুন</option>
+              <option value="">{language === 'bn' ? 'জেলা নির্বাচন করুন' : 'Select District'}</option>
               {districts.map((district) => (
                 <option key={district.value} value={district.value}>
                   {district.label}
@@ -106,8 +91,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-text-primary font-bengali mb-2">
-              উপজেলা/থানা
+            <label className={`block text-sm font-medium text-text-primary mb-2 ${language === 'bn' ? 'font-bengali' : ''}`}>
+              {language === 'bn' ? 'উপজেলা/থানা' : 'Upazila/Thana'}
             </label>
             <select
               value={selectedLocation?.upazila || ''}
@@ -126,7 +111,7 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
               disabled={!selectedDistrict}
               className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
             >
-              <option value="">উপজেলা নির্বাচন করুন</option>
+              <option value="">{language === 'bn' ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila'}</option>
               {filteredUpazilas.map((upazila) => (
                 <option key={upazila.value} value={upazila.value}>
                   {upazila.label}
@@ -138,12 +123,12 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
 
         {/* Search Input */}
         <div>
-          <label className="block text-sm font-medium text-text-primary font-bengali mb-2">
-            এলাকার নাম লিখুন
+          <label className={`block text-sm font-medium text-text-primary mb-2 ${language === 'bn' ? 'font-bengali' : ''}`}>
+            {language === 'bn' ? 'এলাকার নাম লিখুন' : 'Enter Area Name'}
           </label>
           <input
             type="text"
-            placeholder="যেমন: ধানমন্ডি ৩২, গুলশান ২, উত্তরা সেক্টর ৭"
+            placeholder={language === 'bn' ? 'যেমন: ধানমন্ডি ৩২, গুলশান ২, উত্তরা সেক্টর ৭' : 'e.g: Dhanmondi 32, Gulshan 2, Uttara Sector 7'}
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -157,15 +142,15 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
             }}
             className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
           />
-          <p className="text-xs text-muted-foreground font-bengali mt-1">
-            নির্দিষ্ট এলাকা বা রাস্তার নাম লিখুন
+          <p className={`text-xs text-muted-foreground mt-1 ${language === 'bn' ? 'font-bengali' : ''}`}>
+            {language === 'bn' ? 'নির্দিষ্ট এলাকা বা রাস্তার নাম লিখুন' : 'Enter specific area or street name'}
           </p>
         </div>
       </div>
       {/* Distance Radius */}
       <div className="mt-6 p-4 bg-muted rounded-lg">
-        <h3 className="font-bengali font-medium text-text-primary mb-3">
-          অনুসন্ধানের পরিসীমা
+        <h3 className={`font-medium text-text-primary mb-3 ${language === 'bn' ? 'font-bengali' : ''}`}>
+          {language === 'bn' ? 'অনুসন্ধানের পরিসীমা' : 'Search Radius'}
         </h3>
         <div className="flex flex-wrap gap-2">
           {[
@@ -199,8 +184,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
         <div className="mt-4 p-3 bg-success/10 border border-success/20 rounded-lg">
           <div className="flex items-center space-x-2">
             <Icon name="CheckCircle" size={16} color="var(--color-success)" />
-            <span className="text-sm font-bengali text-success">
-              নির্বাচিত: {selectedLocation?.name}
+            <span className={`text-sm text-success ${language === 'bn' ? 'font-bengali' : ''}`}>
+              {language === 'bn' ? 'নির্বাচিত:' : 'Selected:'} {selectedLocation?.name}
             </span>
           </div>
         </div>

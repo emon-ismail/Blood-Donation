@@ -152,7 +152,10 @@ const FindDonors = () => {
 
   const handleWhatsApp = (donor) => {
     const message = `আসসালামু আলাইকুম ${donor?.name}। আমি LifeLink Bangladesh থেকে যোগাযোগ করছি। আমাদের ${selectedBloodGroup} রক্তের জরুরি প্রয়োজন। আপনি কি সাহায্য করতে পারবেন? ধন্যবাদ।`;
-    window.open(`https://wa.me/${donor.mobile.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(message)}`);
+    const cleanMobile = donor.mobile.replace(/[^0-9]/g, '');
+    const whatsappNumber = cleanMobile.startsWith('88') ? cleanMobile : `88${cleanMobile}`;
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+    window.location.href = whatsappUrl;
   };
 
   const handleContactMultiple = (donorIds) => {

@@ -30,7 +30,14 @@ export const translations = {
   selectLocation: { en: 'Select Location', bn: 'এলাকা নির্বাচন করুন' },
   currentLocation: { en: 'Use Current Location', bn: 'বর্তমান অবস্থান ব্যবহার করুন' },
   district: { en: 'District', bn: 'জেলা' },
+  selectDistrict: { en: 'Select District', bn: 'জেলা নির্বাচন করুন' },
   upazila: { en: 'Upazila/Thana', bn: 'উপজেলা/থানা' },
+  selectUpazila: { en: 'Select Upazila', bn: 'উপজেলা নির্বাচন করুন' },
+  allDistricts: { en: 'All 64 Districts', bn: 'সকল ৬৪ জেলা' },
+  districtsCovered: { en: 'Districts Covered', bn: 'জেলায় সেবা' },
+  nationwideNetwork: { en: 'Nationwide Network', bn: 'সারাদেশে নেটওয়ার্ক' },
+  searchRadius: { en: 'Search Radius', bn: 'অনুসন্ধানের পরিসীমা' },
+  enterAreaName: { en: 'Enter Area Name', bn: 'এলাকার নাম লিখুন' },
   
   // Donor Registration
   donorRegistration: { en: 'Donor Registration', bn: 'রক্তদাতা নিবন্ধন' },

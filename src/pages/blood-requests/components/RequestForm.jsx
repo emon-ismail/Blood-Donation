@@ -188,25 +188,148 @@ const RequestForm = ({ onSubmit, onCancel }) => {
           </h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <PlacesAutocomplete
-              label="হাসপাতালের নাম"
-              type="hospital"
-              value={formData?.hospital}
-              onChange={(value) => setFormData(prev => ({ ...prev, hospital: value }))}
-              placeholder="যেমন: ঢাকা মেডিকেল কলেজ হাসপাতাল"
-              error={errors?.hospital}
-              required
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-primary font-bengali">
+                হাসপাতালের নাম <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                list="hospitals"
+                value={formData?.hospital}
+                onChange={(e) => setFormData(prev => ({ ...prev, hospital: e.target.value }))}
+                placeholder="যেমন: চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <datalist id="hospitals">
+                <option value="ঢাকা মেডিকেল কলেজ হাসপাতাল" />
+                <option value="চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল" />
+                <option value="সিলেট এমএজি ওসমানী মেডিকেল কলেজ হাসপাতাল" />
+                <option value="রাজশাহী মেডিকেল কলেজ হাসপাতাল" />
+                <option value="খুলনা মেডিকেল কলেজ হাসপাতাল" />
+                <option value="বরিশাল শের-ই-বাংলা মেডিকেল কলেজ হাসপাতাল" />
+                <option value="রংপুর মেডিকেল কলেজ হাসপাতাল" />
+                <option value="ময়মনসিংহ মেডিকেল কলেজ হাসপাতাল" />
+                <option value="কুমিল্লা মেডিকেল কলেজ হাসপাতাল" />
+                <option value="দিনাজপুর মেডিকেল কলেজ হাসপাতাল" />
+                <option value="বঙ্গবন্ধু শেখ মুজিব মেডিকেল বিশ্ববিদ্যালয়" />
+                <option value="জাতীয় হৃদরোগ ইনস্টিটিউট ও হাসপাতাল" />
+                <option value="জাতীয় ক্যান্সার গবেষণা ইনস্টিটিউট ও হাসপাতাল" />
+                <option value="স্কয়ার হাসপাতাল" />
+                <option value="ইউনাইটেড হাসপাতাল" />
+                <option value="অ্যাপোলো হাসপাতাল ঢাকা" />
+                <option value="লাবএইড হাসপাতাল" />
+                <option value="এভারকেয়ার হাসপাতাল ঢাকা" />
+                <option value="ইব্রাহিম কার্ডিয়াক হাসপাতাল" />
+                <option value="ইবনে সিনা হাসপাতাল" />
+                <option value="পপুলার হাসপাতাল" />
+              </datalist>
+              {errors?.hospital && (
+                <p className="text-sm text-red-500 font-bengali">{errors?.hospital}</p>
+              )}
+            </div>
 
-            <PlacesAutocomplete
-              label="এলাকা/জেলা"
-              type="location"
-              value={formData?.location}
-              onChange={(value) => setFormData(prev => ({ ...prev, location: value }))}
-              placeholder="যেমন: ধানমন্ডি, ঢাকা"
-              error={errors?.location}
-              required
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-primary font-bengali">
+                এলাকা/জেলা <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                list="locations"
+                value={formData?.location}
+                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                placeholder="যেমন: চট্টগ্রাম, ঢাকা, সিলেট"
+                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              />
+              <datalist id="locations">
+                <option value="ঢাকা" />
+                <option value="চট্টগ্রাম" />
+                <option value="সিলেট" />
+                <option value="রাজশাহী" />
+                <option value="খুলনা" />
+                <option value="বরিশাল" />
+                <option value="রংপুর" />
+                <option value="ময়মনসিংহ" />
+                <option value="কুমিল্লা" />
+                <option value="ফরিদপুর" />
+                <option value="গাজীপুর" />
+                <option value="নারায়ণগঞ্জ" />
+                <option value="টাঙ্গাইল" />
+                <option value="নরসিংদী" />
+                <option value="মানিকগঞ্জ" />
+                <option value="মুন্শিগঞ্জ" />
+                <option value="গোপালগঞ্জ" />
+                <option value="মাদারীপুর" />
+                <option value="শরীয়তপুর" />
+                <option value="রাজবাড়ী" />
+                <option value="কিশোরগঞ্জ" />
+                <option value="নোয়াখালী" />
+                <option value="ফেনী" />
+                <option value="লক্ষ্মীপুর" />
+                <option value="চাঁদপুর" />
+                <option value="ব্রাহ্মণবাড়িয়া" />
+                <option value="রাঙ্গামাটি" />
+                <option value="বান্দরবান" />
+                <option value="খাগড়াছড়ি" />
+                <option value="কক্সবাজার" />
+                <option value="হবিগঞ্জ" />
+                <option value="মৌলভীবাজার" />
+                <option value="সুনামগঞ্জ" />
+                <option value="নাটোর" />
+                <option value="নওগাঁ" />
+                <option value="চাঁপাইনবাবগঞ্জ" />
+                <option value="পাবনা" />
+                <option value="সিরাজগঞ্জ" />
+                <option value="বগুড়া" />
+                <option value="জয়পুরহাট" />
+                <option value="যশোর" />
+                <option value="সাতক্ষীরা" />
+                <option value="মেহেরপুর" />
+                <option value="নড়াইল" />
+                <option value="চুয়াডাঙ্গা" />
+                <option value="কুষ্টিয়া" />
+                <option value="মাগুরা" />
+                <option value="ঝিনাইদহ" />
+                <option value="বাগেরহাট" />
+                <option value="পিরোজপুর" />
+                <option value="ঝালকাঠি" />
+                <option value="পটুয়াখালী" />
+                <option value="বরগুনা" />
+                <option value="ভোলা" />
+                <option value="ঠাকুরগাঁও" />
+                <option value="পঞ্চগড়" />
+                <option value="নীলফামারী" />
+                <option value="লালমনিরহাট" />
+                <option value="কুড়িগ্রাম" />
+                <option value="গাইবান্ধা" />
+                <option value="দিনাজপুর" />
+                <option value="নেত্রকোনা" />
+                <option value="জামালপুর" />
+                <option value="শেরপুর" />
+              </datalist>
+              {errors?.location && (
+                <p className="text-sm text-red-500 font-bengali">{errors?.location}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-text-primary font-bengali">
+              বিস্তারিত ঠিকানা <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="detailedAddress"
+              value={formData?.detailedAddress || ''}
+              onChange={handleInputChange}
+              rows={3}
+              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+              placeholder="যেমন: চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল, আন্দরকিল্লা, চট্টগ্রাম - ৪০০০। রক্তদাতারা দয়া করে ওয়ার্ড নং ৫ এ যোগাযোগ করুন।"
             />
+            <p className="text-xs text-muted-foreground font-bengali">
+              রক্তদাতাদের সুবিধার জন্য সম্পূর্ণ ঠিকানা, ওয়ার্ড নম্বর এবং যোগাযোগের নির্দেশনা দিন
+            </p>
+            {errors?.detailedAddress && (
+              <p className="text-sm text-red-500 font-bengali">{errors?.detailedAddress}</p>
+            )}
           </div>
         </div>
 

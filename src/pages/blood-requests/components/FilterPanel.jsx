@@ -76,6 +76,33 @@ const FilterPanel = ({ filters, onFilterChange, onClearFilters, availableLocatio
           </div>
         </div>
 
+        {/* Location Filter */}
+        <div>
+          <h4 className="text-sm font-bengali font-semibold text-text-primary mb-3">এলাকা/জেলা</h4>
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {[
+              'ঢাকা', 'চট্টগ্রাম', 'সিলেট', 'রাজশাহী', 'খুলনা', 'বরিশাল', 'রংপুর', 'ময়মনসিংহ',
+              'কুমিল্লা', 'ফরিদপুর', 'গাজীপুর', 'নারায়ণগঞ্জ', 'টাঙ্গাইল', 'নরসিংদী', 'মানিকগঞ্জ', 'মুন্শিগঞ্জ',
+              'গোপালগঞ্জ', 'মাদারীপুর', 'শরীয়তপুর', 'রাজবাড়ী', 'কিশোরগঞ্জ', 'নোয়াখালী', 'ফেনী', 'লক্ষ্মীপুর',
+              'চাঁদপুর', 'ব্রাহ্মণবাড়িয়া', 'রাঙ্গামাটি', 'বান্দরবান', 'খাগড়াছড়ি', 'কক্সবাজার', 'হবিগঞ্জ', 'মৌলভীবাজার',
+              'সুনামগঞ্জ', 'নাটোর', 'নওগাঁ', 'চাঁপাইনবাবগঞ্জ', 'পাবনা', 'সিরাজগঞ্জ', 'বগুড়া', 'জয়পুরহাট',
+              'যশোর', 'সাতক্ষীরা', 'মেহেরপুর', 'নড়াইল', 'চুয়াডাঙ্গা', 'কুষ্টিয়া', 'মাগুরা', 'ঝিনাইদহ',
+              'বাগেরহাট', 'পিরোজপুর', 'ঝালকাঠি', 'পটুয়াখালী', 'বরগুনা', 'ভোলা', 'ঠাকুরগাঁও', 'পঞ্চগড়',
+              'নীলফামারী', 'লালমনিরহাট', 'কুড়িগ্রাম', 'গাইবান্ধা', 'দিনাজপুর', 'নেত্রকোনা', 'জামালপুর', 'শেরপুর'
+            ]?.map((location) => (
+              <label key={location} className="flex items-center space-x-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filters?.locations?.includes(location) || false}
+                  onChange={() => toggleArrayFilter('locations', location)}
+                  className="w-4 h-4 text-primary rounded focus:ring-primary"
+                />
+                <span className="font-bengali text-sm text-text-primary">{location}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
         {/* Urgency Level Filter */}
         <div>
           <h4 className="text-sm font-bengali font-semibold text-text-primary mb-3">জরুরি মাত্রা</h4>
@@ -220,6 +247,11 @@ const FilterPanel = ({ filters, onFilterChange, onClearFilters, availableLocatio
             {filters?.bloodGroups?.map(group => (
               <span key={group} className="px-2 py-1 bg-primary text-white text-xs rounded-full">
                 {group}
+              </span>
+            ))}
+            {filters?.locations?.map(location => (
+              <span key={location} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-bengali">
+                {location}
               </span>
             ))}
             {filters?.urgencyLevels?.map(level => (

@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import { useTranslation } from '../../../hooks/useTranslation';
+import { formatNumber } from '../../../utils/numberUtils';
+import { allDistricts } from '../../../data/districts';
 
 const ImpactDashboard = () => {
   const navigate = useNavigate();
@@ -17,7 +19,7 @@ const ImpactDashboard = () => {
   const finalStats = {
     totalDonors: 1247,
     livesSaved: 523,
-    districtsCovered: 64,
+    districtsCovered: allDistricts.length,
     successfulConnections: 98
   };
 
@@ -77,7 +79,7 @@ const ImpactDashboard = () => {
       id: 3,
       title: isBengali ? "জেলায় সেবা" : "Districts Served",
       value: animatedStats?.districtsCovered,
-      suffix: "/৬৪",
+      suffix: isBengali ? `/৬৪` : `/64`,
       icon: "MapPin",
       color: "text-green-600",
       bgColor: "bg-green-50",
@@ -132,7 +134,7 @@ const ImpactDashboard = () => {
                 <div className="text-right">
                   <div className="flex items-baseline space-x-1">
                     <span className={`text-3xl font-bold ${metric?.color}`}>
-                      {metric?.value?.toLocaleString()}
+                      {formatNumber(metric?.value, isBengali)}
                     </span>
                     <span className={`text-lg font-medium ${metric?.color}`}>
                       {metric?.suffix}

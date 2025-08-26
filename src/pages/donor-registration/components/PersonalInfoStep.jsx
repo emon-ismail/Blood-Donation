@@ -2,6 +2,7 @@ import React from 'react';
 import Input from '../../../components/ui/Input';
 import Select from '../../../components/ui/Select';
 import Icon from '../../../components/AppIcon';
+import { allDistricts } from '../../../data/districts';
 
 const PersonalInfoStep = ({ formData, setFormData, errors }) => {
   const genderOptions = [
@@ -10,16 +11,11 @@ const PersonalInfoStep = ({ formData, setFormData, errors }) => {
     { value: 'other', label: 'অন্যান্য' }
   ];
 
-  const districtOptions = [
-    { value: 'dhaka', label: 'ঢাকা' },
-    { value: 'chittagong', label: 'চট্টগ্রাম' },
-    { value: 'sylhet', label: 'সিলেট' },
-    { value: 'rajshahi', label: 'রাজশাহী' },
-    { value: 'khulna', label: 'খুলনা' },
-    { value: 'barisal', label: 'বরিশাল' },
-    { value: 'rangpur', label: 'রংপুর' },
-    { value: 'mymensingh', label: 'ময়মনসিংহ' }
-  ];
+  // Use all 64 districts from districts data
+  const districtOptions = allDistricts.map(district => ({
+    value: district.en.toLowerCase().replace(/[^a-z0-9]/g, ''),
+    label: district.bn
+  }));
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
