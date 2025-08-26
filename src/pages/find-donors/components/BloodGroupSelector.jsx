@@ -21,6 +21,11 @@ const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergenc
 
   useEffect(() => {
     loadBloodGroupCounts();
+    
+    // Refresh counts every 30 seconds
+    const interval = setInterval(loadBloodGroupCounts, 30000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   const loadBloodGroupCounts = async () => {
@@ -30,9 +35,7 @@ const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergenc
       // Get count for each blood group
       for (const bloodGroup of bloodGroups) {
         const donors = await donorService.searchDonors({
-          bloodGroup: bloodGroup.group,
-          location: '',
-          availability: 'available'
+          bloodGroup: bloodGroup.group
         });
         counts[bloodGroup.group] = donors.length;
       }
@@ -51,12 +54,21 @@ const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergenc
         <h2 className={`text-xl font-semibold text-text-primary ${isBengali ? 'font-bengali' : ''}`}>
           {t('selectBloodGroup')}
         </h2>
-        {isEmergencyMode && (
-          <div className="flex items-center space-x-2 text-destructive">
-            <div className="w-2 h-2 bg-destructive rounded-full animate-pulse"></div>
-            <span className={`text-sm font-medium ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'জরুরি মোড' : 'Emergency Mode'}</span>
-          </div>
-        )}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={loadBloodGroupCounts}
+            className="text-sm text-primary hover:text-primary/80 font-bengali"
+            disabled={loading}
+          >
+            {loading ? 'আপডেট হচ্ছে...' : '🔄 আপডেট'}
+          </button>
+          {isEmergencyMode && (
+            <div className="flex items-center space-x-2 text-destructive">
+              <div className="w-2 h-2 bg-destructive rounded-full animate-pulse"></div>
+              <span className={`text-sm font-medium ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'জরুরি মোড' : 'Emergency Mode'}</span>
+            </div>
+          )}
+        </div>
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {bloodGroups?.map((blood) => (
