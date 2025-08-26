@@ -11,7 +11,12 @@ const SearchResults = ({
   onQuickCall, 
   onWhatsApp, 
   onContactMultiple,
-  isEmergencyMode 
+  isEmergencyMode,
+  currentPage,
+  totalDonors,
+  donorsPerPage,
+  onPageChange,
+  hasSearched
 }) => {
   const [selectedDonors, setSelectedDonors] = useState([]);
   const [sortBy, setSortBy] = useState('distance');
@@ -108,7 +113,7 @@ const SearchResults = ({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-4">
             <h2 className="text-xl font-bengali font-semibold text-text-primary">
-              অনুসন্ধানের ফলাফল
+              {searchQuery ? 'অনুসন্ধানের ফলাফল' : 'সাম্প্রতিক রক্তদাতা'}
             </h2>
             <span className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm font-bengali">
               {donors?.length} জন পাওয়া গেছে
@@ -209,18 +214,45 @@ const SearchResults = ({
           </div>
         ))}
       </div>
-      {/* Load More */}
-      {donors?.length >= 10 && (
-        <div className="text-center">
-          <Button
-            variant="outline"
-            size="lg"
-            iconName="ChevronDown"
-            iconPosition="right"
-            className="font-bengali"
-          >
-            আরও দাতা দেখুন
-          </Button>
+      {/* Pagination */}
+      {totalDonors > donorsPerPage && (
+        <div className="bg-white rounded-xl shadow-brand p-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
+            <div className="text-sm text-muted-foreground font-bengali">
+              {((currentPage - 1) * donorsPerPage) + 1} - {Math.min(currentPage * donorsPerPage, totalDonors)} of {totalDonors} জন দাতা
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                iconName="ChevronLeft"
+                onClick={() => onPageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+              />
+              {Array.from({ length: Math.min(5, Math.ceil(totalDonors / donorsPerPage)) }, (_, i) => {
+                const pageNum = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                if (pageNum > Math.ceil(totalDonors / donorsPerPage)) return null;
+                return (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => onPageChange(pageNum)}
+                    className="min-w-[40px]"
+                  >
+                    {pageNum}
+                  </Button>
+                );
+              })}
+              <Button
+                variant="outline"
+                size="sm"
+                iconName="ChevronRight"
+                onClick={() => onPageChange(currentPage + 1)}
+                disabled={currentPage >= Math.ceil(totalDonors / donorsPerPage)}
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>

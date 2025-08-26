@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import ImpactSummary from './components/ImpactSummary';
 import AchievementBadges from './components/AchievementBadges';
@@ -7,8 +8,12 @@ import EligibilityTracker from './components/EligibilityTracker';
 import NotificationPreferences from './components/NotificationPreferences';
 import ReferralSystem from './components/ReferralSystem';
 import Icon from '../../components/AppIcon';
+import { useAuth } from '../../contexts/AuthContext';
+import { donorService } from '../../lib/donorService';
 
 const DonorDashboard = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [donorData, setDonorData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -215,14 +220,45 @@ const DonorDashboard = () => {
   };
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setDonorData(mockDonorData);
-      setLoading(false);
-    }, 1000);
+    if (!user?.email) {
+      navigate('/donor-login');
+      return;
+    }
 
-    return () => clearTimeout(timer);
-  }, []);
+    const loadDonorData = async () => {
+      try {
+        const donor = await donorService.getDonorByEmail(user.email);
+        if (donor) {
+          setDonorData({
+            id: donor.id,
+            name: donor.full_name,
+            bloodGroup: donor.blood_group,
+            phone: donor.mobile,
+            email: donor.email,
+            location: `${donor.upazila}, ${donor.district}`,
+            district: donor.district,
+            joinDate: donor.created_at,
+            verified: donor.is_verified,
+            livesSaved: 0,
+            totalDonations: 0,
+            communityRank: 0,
+            nextDonationDays: 90,
+            lastDonationDate: null,
+            profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`
+          });
+        } else {
+          navigate('/donor-login');
+        }
+      } catch (error) {
+        console.error('Failed to load donor data:', error);
+        navigate('/donor-login');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDonorData();
+  }, [user, navigate]);
 
   const handleUpdatePreferences = async (newPreferences) => {
     // Simulate API call
@@ -277,21 +313,21 @@ const DonorDashboard = () => {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bengali font-bold mb-1">
-                    স্বাগতম, {donorData?.name}
+                    স্বাগতম, {donorData?.name || 'দাতা'}
                   </h1>
                   <p className="text-white/80 font-bengali">
-                    {donorData?.bloodGroup} গ্রুপ • {donorData?.district} • যোগদান: {new Date(donorData.joinDate)?.getFullYear()}
+                    {donorData?.bloodGroup} গ্রুপ • {donorData?.district} • যোগদান: {donorData?.joinDate ? new Date(donorData.joinDate)?.getFullYear() : '২০২৪'}
                   </p>
                 </div>
               </div>
               <div className="hidden md:flex items-center space-x-4">
                 <div className="text-center">
-                  <p className="text-3xl font-bold">{donorData?.livesSaved}</p>
+                  <p className="text-3xl font-bold">{donorData?.livesSaved || 0}</p>
                   <p className="text-sm font-bengali text-white/80">জীবন বাঁচানো</p>
                 </div>
                 <div className="w-px h-12 bg-white/20"></div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold">{donorData?.totalDonations}</p>
+                  <p className="text-3xl font-bold">{donorData?.totalDonations || 0}</p>
                   <p className="text-sm font-bengali text-white/80">রক্তদান</p>
                 </div>
               </div>

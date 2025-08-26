@@ -23,20 +23,26 @@ const FindDonors = () => {
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
-  const [hasSearched, setHasSearched] = useState(true);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalDonors, setTotalDonors] = useState(0);
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [lastSearchFilters, setLastSearchFilters] = useState(null);
+  const donorsPerPage = 6;
 
-  // Load real donors from database on component mount
+  // Load donors based on mode (search or recent)
   useEffect(() => {
-    loadAllDonors();
-  }, []);
+    if (isSearchMode && lastSearchFilters) {
+      performSearch(lastSearchFilters, currentPage);
+    } else {
+      loadRecentDonors();
+    }
+  }, [currentPage]);
 
-  const loadAllDonors = async () => {
+  const loadRecentDonors = async () => {
     try {
-      const donors = await donorService.searchDonors({
-        bloodGroup: '',
-        location: '',
-        availability: 'all'
-      });
+      const donors = await donorService.getRecentDonors(currentPage, donorsPerPage);
+      const allDonors = await donorService.getAllDonors();
       
       // Transform data for display
       const transformedDonors = donors.map(donor => ({
@@ -61,6 +67,7 @@ const FindDonors = () => {
       }));
       
       setSearchResults(transformedDonors);
+      setTotalDonors(allDonors.length);
       setHasSearched(true);
     } catch (error) {
       console.error('Failed to load donors:', error);
@@ -78,23 +85,8 @@ const FindDonors = () => {
     }
   }, []);
 
-  const handleSearch = async () => {
-    if (!selectedBloodGroup) {
-      alert('অনুগ্রহ করে রক্তের গ্রুপ নির্বাচন করুন');
-      return;
-    }
-
-    setIsLoading(true);
-    setHasSearched(true);
-
+  const performSearch = async (searchFilters, page = 1) => {
     try {
-      // Search real donors from database with filters
-      const searchFilters = {
-        bloodGroup: selectedBloodGroup,
-        district: selectedLocation?.district,
-        availability: filters?.availability
-      };
-
       const donors = await donorService.searchDonors(searchFilters);
       
       // Transform data for display
@@ -119,13 +111,40 @@ const FindDonors = () => {
         mobile: donor.mobile
       }));
 
-      setSearchResults(transformedDonors);
+      // Apply pagination to search results
+      const startIndex = (page - 1) * donorsPerPage;
+      const paginatedResults = transformedDonors.slice(startIndex, startIndex + donorsPerPage);
+      
+      setSearchResults(paginatedResults);
+      setTotalDonors(transformedDonors.length);
     } catch (error) {
       console.error('Search error:', error);
       alert('ডেটা লোড করতে সমস্যা হয়েছে');
-    } finally {
-      setIsLoading(false);
     }
+  };
+
+  const handleSearch = async () => {
+    if (!selectedBloodGroup) {
+      alert('অনুগ্রহ করে রক্তের গ্রুপ নির্বাচন করুন');
+      return;
+    }
+
+    setIsLoading(true);
+    setCurrentPage(1);
+    setIsSearchMode(true);
+    setHasSearched(true);
+
+    const searchFilters = {
+      bloodGroup: selectedBloodGroup,
+      district: selectedLocation?.district || selectedLocation?.name,
+      upazila: selectedLocation?.upazila,
+      availability: filters?.availability,
+      location: selectedLocation
+    };
+    
+    setLastSearchFilters(searchFilters);
+    await performSearch(searchFilters, 1);
+    setIsLoading(false);
   };
 
   const handleContactDonor = (donor, method = 'phone') => {
@@ -218,7 +237,7 @@ const FindDonors = () => {
               />
 
               {/* Search Button */}
-              <div className="text-center">
+              <div className="text-center space-x-4">
                 <Button
                   variant="default"
                   size={isEmergencyMode ? "xl" : "lg"}
@@ -230,6 +249,26 @@ const FindDonors = () => {
                 >
                   {isLoading ? 'খোঁজা হচ্ছে...' : 'রক্তদাতা খুঁজুন'}
                 </Button>
+                {isSearchMode && (
+                  <Button
+                    variant="outline"
+                    size={isEmergencyMode ? "xl" : "lg"}
+                    iconName="X"
+                    iconPosition="left"
+                    onClick={() => {
+                      setIsSearchMode(false);
+                      setLastSearchFilters(null);
+                      setCurrentPage(1);
+                      setSelectedBloodGroup('');
+                      setSelectedLocation(null);
+                      setFilters({});
+                      loadRecentDonors();
+                    }}
+                    className="font-bengali"
+                  >
+                    ফিল্টার সাফ করুন
+                  </Button>
+                )}
               </div>
 
               {/* Search Results */}
@@ -242,6 +281,13 @@ const FindDonors = () => {
                   onWhatsApp={handleWhatsApp}
                   onContactMultiple={handleContactMultiple}
                   isEmergencyMode={isEmergencyMode}
+                  currentPage={currentPage}
+                  totalDonors={totalDonors}
+                  donorsPerPage={donorsPerPage}
+                  onPageChange={(page) => {
+                    setCurrentPage(page);
+                  }}
+                  hasSearched={hasSearched}
                 />
             </div>
 

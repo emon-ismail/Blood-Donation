@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../components/ui/Header';
 import Button from '../../components/ui/Button';
 import Icon from '../../components/AppIcon';
 import { donorService } from '../../lib/donorService';
+import { useAuth } from '../../contexts/AuthContext';
 
 // Import components
 import RegistrationHeader from './components/RegistrationHeader';
@@ -14,6 +16,8 @@ import VerificationStep from './components/VerificationStep';
 import SuccessMessage from './components/SuccessMessage';
 
 const DonorRegistration = () => {
+  const navigate = useNavigate();
+  const { login } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
@@ -48,7 +52,7 @@ const DonorRegistration = () => {
     agreeToTerms: false
   });
 
-  const totalSteps = 4;
+  const totalSteps = 3;
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -84,12 +88,10 @@ const DonorRegistration = () => {
         if (!formData?.mobile || !mobileRegex?.test(formData?.mobile)) {
           newErrors.mobile = 'সঠিক মোবাইল নম্বর দিন (01xxxxxxxxx)';
         }
-        if (formData?.email && !/\S+@\S+\.\S+/?.test(formData?.email)) {
-          newErrors.email = 'সঠিক ইমেইল ঠিকানা দিন';
+        if (!formData?.email || !/\S+@\S+\.\S+/?.test(formData?.email)) {
+          newErrors.email = 'ইমেইল ঠিকানা আবশ্যক';
         }
-        if (!formData?.emergencyContact || !mobileRegex?.test(formData?.emergencyContact)) {
-          newErrors.emergencyContact = 'জরুরি যোগাযোগের সঠিক নম্বর দিন';
-        }
+
         if (!formData?.agreeToTerms) {
           newErrors.agreeToTerms = 'শর্তাবলীতে সম্মতি প্রয়োজন';
         }
@@ -142,7 +144,12 @@ const DonorRegistration = () => {
       // Create new donor
       const newDonor = await donorService.createDonor(formData);
       setFormData(prev => ({ ...prev, donorId: newDonor.id }));
-      setCurrentStep(4); // Move to verification step
+      
+      // Auto login the user using AuthContext
+      await login(formData.email);
+      
+      // Redirect to dashboard
+      navigate('/donor-dashboard');
     } catch (error) {
       console.error('Registration error:', error);
       setErrors({ submit: 'নিবন্ধনে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।' });
@@ -199,14 +206,6 @@ const DonorRegistration = () => {
             errors={errors}
           />
         );
-      case 4:
-        return (
-          <VerificationStep
-            formData={formData}
-            onVerificationComplete={handleVerificationComplete}
-            errors={errors}
-          />
-        );
       default:
         return null;
     }
@@ -217,7 +216,7 @@ const DonorRegistration = () => {
 
     return (
       <div className="flex flex-col sm:flex-row gap-4 mt-8">
-        {currentStep > 1 && currentStep < 4 && (
+        {currentStep > 1 && currentStep < 3 && (
           <Button
             variant="outline"
             onClick={handlePrevious}

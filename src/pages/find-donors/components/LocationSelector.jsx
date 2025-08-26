@@ -12,7 +12,7 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
   const [selectedDistrict, setSelectedDistrict] = useState('');
   const [filteredUpazilas, setFilteredUpazilas] = useState([]);
 
-  // Use all 64 districts from districts data
+  // Use all 64 districts from districts data - same format as registration
   const districts = allDistricts.map(district => ({
     value: district.en.toLowerCase().replace(/[^a-z0-9]/g, ''),
     label: language === 'bn' ? district.bn : district.en
@@ -34,19 +34,60 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
   const handleCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation?.getCurrentPosition(
-        (position) => {
-          const location = {
-            type: 'current',
-            lat: position?.coords?.latitude,
-            lng: position?.coords?.longitude,
-            name: 'বর্তমান অবস্থান'
-          };
-          onLocationSelect(location);
+        async (position) => {
+          const lat = position?.coords?.latitude;
+          const lng = position?.coords?.longitude;
+          
+          try {
+            // Reverse geocoding to get district name
+            const response = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=en`);
+            const data = await response.json();
+            
+            const rawDistrict = data.city || data.locality || data.principalSubdivision || 'Unknown';
+            
+            // Map common district name variations
+            const districtMapping = {
+              'chattogram': 'chittagong',
+              'chittagong': 'chittagong',
+              'dhaka': 'dhaka',
+              'sylhet': 'sylhet',
+              'rajshahi': 'rajshahi',
+              'khulna': 'khulna',
+              'barishal': 'barishal',
+              'rangpur': 'rangpur',
+              'mymensingh': 'mymensingh'
+            };
+            
+            const normalizedDistrict = districtMapping[rawDistrict.toLowerCase()] || rawDistrict.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            const location = {
+              type: 'current',
+              lat: lat,
+              lng: lng,
+              district: normalizedDistrict,
+              name: `বর্তমান অবস্থান (${rawDistrict})`
+            };
+            
+            onLocationSelect(location);
+          } catch (error) {
+            console.error('Failed to get location details:', error);
+            // Fallback without district info
+            const location = {
+              type: 'current',
+              lat: lat,
+              lng: lng,
+              name: 'বর্তমান অবস্থান'
+            };
+            onLocationSelect(location);
+          }
         },
         (error) => {
           console.error('Location access denied:', error);
+          alert('অবস্থান অ্যাক্সেস করতে পারছি না। অনুগ্রহ করে ব্রাউজারে location permission দিন।');
         }
       );
+    } else {
+      alert('আপনার ব্রাউজার geolocation সাপোর্ট করে না।');
     }
   };
 
@@ -78,12 +119,25 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
             </label>
             <select
               value={selectedDistrict}
-              onChange={(e) => setSelectedDistrict(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value;
+                setSelectedDistrict(value);
+                if (value) {
+                  const districtObj = districts?.find(d => d?.value === value);
+                  onLocationSelect({
+                    type: 'manual',
+                    district: value,
+                    name: districtObj?.label
+                  });
+                } else {
+                  onLocationSelect(null);
+                }
+              }}
               className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
             >
               <option value="">{language === 'bn' ? 'জেলা নির্বাচন করুন' : 'Select District'}</option>
-              {districts.map((district) => (
-                <option key={district.value} value={district.value}>
+              {districts.map((district, index) => (
+                <option key={`district-${district.value || index}`} value={district.value}>
                   {district.label}
                 </option>
               ))}
@@ -100,11 +154,12 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
                 const value = e.target.value;
                 const upazila = filteredUpazilas?.find(u => u?.value === value);
                 if (upazila) {
+                  const districtObj = districts?.find(d => d?.value === selectedDistrict);
                   onLocationSelect({
                     type: 'manual',
                     district: selectedDistrict,
-                    upazila: value,
-                    name: `${upazila?.label}, ${districts?.find(d => d?.value === selectedDistrict)?.label}`
+                    upazila: upazila?.label,
+                    name: `${upazila?.label}, ${districtObj?.label}`
                   });
                 }
               }}
@@ -112,8 +167,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
               className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
             >
               <option value="">{language === 'bn' ? 'উপজেলা নির্বাচন করুন' : 'Select Upazila'}</option>
-              {filteredUpazilas.map((upazila) => (
-                <option key={upazila.value} value={upazila.value}>
+              {filteredUpazilas.map((upazila, index) => (
+                <option key={`upazila-${upazila.value || index}`} value={upazila.value}>
                   {upazila.label}
                 </option>
               ))}

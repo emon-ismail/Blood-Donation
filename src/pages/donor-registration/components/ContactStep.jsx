@@ -44,25 +44,17 @@ const ContactStep = ({ formData, setFormData, errors }) => {
           />
 
           <Input
-            label="ইমেইল ঠিকানা (ঐচ্ছিক)"
+            label="ইমেইল ঠিকানা"
             type="email"
             placeholder="example@email.com"
             value={formData?.email}
             onChange={(e) => handleInputChange('email', e?.target?.value)}
             error={errors?.email}
-            description="গুরুত্বপূর্ণ আপডেটের জন্য"
+            required
+            description="লগইন এবং গুরুত্বপূর্ণ আপডেটের জন্য"
           />
 
-          <Input
-            label="জরুরি যোগাযোগ নম্বর"
-            type="tel"
-            placeholder="পরিবারের কারো নম্বর"
-            value={formData?.emergencyContact}
-            onChange={(e) => handleInputChange('emergencyContact', e?.target?.value)}
-            error={errors?.emergencyContact}
-            required
-            description="জরুরি অবস্থায় যোগাযোগের জন্য"
-          />
+
         </div>
 
         {/* Communication Preferences */}

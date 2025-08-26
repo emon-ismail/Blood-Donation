@@ -7,6 +7,7 @@ import BloodRequestsPage from './pages/blood-requests';
 import DonorRegistration from './pages/donor-registration';
 import AdminDashboard from './pages/admin-dashboard';
 import DonorDashboard from './pages/donor-dashboard';
+import DonorLogin from './pages/donor-login';
 import FindDonors from './pages/find-donors';
 import Homepage from './pages/homepage';
 import { LanguageProvider } from './contexts/LanguageContext';
@@ -23,6 +24,7 @@ const Routes = () => {
         <Route path="/blood-requests" element={<BloodRequestsPage />} />
         <Route path="/donor-registration" element={<DonorRegistration />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="/donor-login" element={<DonorLogin />} />
         <Route path="/donor-dashboard" element={<DonorDashboard />} />
         <Route path="/find-donors" element={<FindDonors />} />
         <Route path="/homepage" element={<Homepage />} />
