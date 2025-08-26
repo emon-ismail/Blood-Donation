@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { t, isBengali } = useTranslation();
   const [liveStats, setLiveStats] = useState({
     livesSaved: 523,
     activeDonors: 1247,
@@ -39,19 +41,19 @@ const HeroSection = () => {
             <div className="inline-flex items-center space-x-4 bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-brand border border-green-100">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
-                <span className="text-sm font-medium text-success font-bengali">লাইভ</span>
+                <span className={`text-sm font-medium text-success ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'লাইভ' : 'Live'}</span>
               </div>
               <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center space-x-1">
                   <Icon name="Heart" size={16} className="text-primary heartbeat" />
                   <span className="font-bold text-primary">{liveStats?.livesSaved}</span>
-                  <span className="text-text-secondary font-bengali">জীবন বাঁচানো</span>
+                  <span className={`text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'জীবন বাঁচানো' : 'Lives Saved'}</span>
                 </div>
                 <div className="w-px h-4 bg-border"></div>
                 <div className="flex items-center space-x-1">
                   <Icon name="Users" size={16} className="text-secondary" />
                   <span className="font-bold text-secondary">{liveStats?.activeDonors}</span>
-                  <span className="text-text-secondary font-bengali">সক্রিয় দাতা</span>
+                  <span className={`text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'সক্রিয় দাতা' : 'Active Donors'}</span>
                 </div>
               </div>
             </div>
@@ -59,17 +61,29 @@ const HeroSection = () => {
             {/* Main Headline */}
             <div className="space-y-4">
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight">
-                <span className="text-primary font-bengali block">আপনার রক্ত,</span>
-                <span className="text-secondary font-bengali block">তাদের আশা</span>
+                {isBengali ? (
+                  <>
+                    <span className="text-primary font-bengali block">আপনার রক্ত,</span>
+                    <span className="text-secondary font-bengali block">তাদের আশা</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-primary block">Your Blood,</span>
+                    <span className="text-secondary block">Their Hope</span>
+                  </>
+                )}
               </h1>
               <p className="text-lg sm:text-xl text-text-secondary font-inter italic">
-                Your Blood, Their Hope
+                {isBengali ? 'Your Blood, Their Hope' : 'আপনার রক্ত, তাদের আশা'}
               </p>
             </div>
 
             {/* Description */}
-            <p className="text-lg text-text-secondary max-w-2xl font-bengali leading-relaxed">
-              বাংলাদেশের সবচেয়ে বিশ্বস্ত রক্তদান প্ল্যাটফর্ম। জরুরি মুহূর্তে রক্তের প্রয়োজনে আমরা আছি আপনার পাশে। একসাথে গড়ি একটি সুস্থ ও নিরাপদ বাংলাদেশ।
+            <p className={`text-lg text-text-secondary max-w-2xl leading-relaxed ${isBengali ? 'font-bengali' : ''}`}>
+              {isBengali 
+                ? 'বাংলাদেশের সবচেয়ে বিশ্বস্ত রক্তদান প্ল্যাটফর্ম। জরুরি মুহূর্তে রক্তের প্রয়োজনে আমরা আছি আপনার পাশে। একসাথে গড়ি একটি সুস্থ ও নিরাপদ বাংলাদেশ।'
+                : "Bangladesh's most trusted blood donation platform. We are here for you in urgent moments when blood is needed. Together we build a healthy and safe Bangladesh."
+              }
             </p>
 
             {/* CTA Buttons */}
@@ -82,7 +96,7 @@ const HeroSection = () => {
                 className="text-lg px-8 py-4 shadow-brand hover:shadow-brand-lg transition-all duration-300"
                 onClick={() => navigate('/donor-registration')}
               >
-                <span className="font-bengali">রক্তদাতা হন</span>
+                <span className={isBengali ? 'font-bengali' : ''}>{t('becomeDonor')}</span>
               </Button>
               <Button
                 variant="outline"
@@ -92,7 +106,7 @@ const HeroSection = () => {
                 className="text-lg px-8 py-4 border-2 hover:bg-primary hover:text-white transition-all duration-300"
                 onClick={() => navigate('/find-donors')}
               >
-                <span className="font-bengali">রক্ত খুঁজুন</span>
+                <span className={isBengali ? 'font-bengali' : ''}>{t('findDonors')}</span>
               </Button>
             </div>
 

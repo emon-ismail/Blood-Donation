@@ -2,12 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Icon from '../AppIcon';
 import Button from './Button';
+import LanguageToggle from './LanguageToggle';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { t } from '../../utils/translations';
 
 const Header = ({ className = '' }) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
+  const { language } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -19,15 +23,15 @@ const Header = ({ className = '' }) => {
   }, []);
 
   const navigationItems = [
-    { name: 'হোম', path: '/homepage', icon: 'Home' },
-    { name: 'রক্তদাতা খুঁজুন', path: '/find-donors', icon: 'Search' },
-    { name: 'রক্তের অনুরোধ', path: '/blood-requests', icon: 'Heart' },
-    { name: 'রক্তদাতা হন', path: '/donor-registration', icon: 'UserPlus' },
+    { name: t('home', language), path: '/homepage', icon: 'Home' },
+    { name: t('findDonors', language), path: '/find-donors', icon: 'Search' },
+    { name: t('bloodRequests', language), path: '/blood-requests', icon: 'Heart' },
+    { name: t('becomeDonor', language), path: '/donor-registration', icon: 'UserPlus' },
   ];
 
   const secondaryItems = [
-    { name: 'ড্যাশবোর্ড', path: '/donor-dashboard', icon: 'LayoutDashboard' },
-    { name: 'অ্যাডমিন', path: '/admin-dashboard', icon: 'Settings' },
+    { name: t('dashboard', language), path: '/donor-dashboard', icon: 'LayoutDashboard' },
+    { name: t('admin', language), path: '/admin-dashboard', icon: 'Settings' },
   ];
 
   const handleNavigation = (path) => {
@@ -81,7 +85,7 @@ const Header = ({ className = '' }) => {
                 }`}
               >
                 <Icon name={item?.icon} size={18} />
-                <span className="font-bengali">{item?.name}</span>
+                <span className={language === 'bn' ? 'font-bengali' : ''}>{item?.name}</span>
               </button>
             ))}
           </nav>
@@ -89,6 +93,7 @@ const Header = ({ className = '' }) => {
           {/* Desktop Actions */}
           <div className="hidden lg:flex items-center space-x-3">
             {/* Emergency Button */}
+            <LanguageToggle className="mr-2" />
             <Button
               variant="destructive"
               size="sm"
@@ -97,7 +102,7 @@ const Header = ({ className = '' }) => {
               className="heartbeat"
               onClick={() => handleNavigation('/blood-requests')}
             >
-              <span className="font-bengali">জরুরি</span>
+              <span className={language === 'bn' ? 'font-bengali' : ''}>{t('emergency', language)}</span>
             </Button>
 
             {/* More Menu */}
@@ -107,7 +112,7 @@ const Header = ({ className = '' }) => {
                 className="flex items-center space-x-1 px-3 py-2 rounded-lg text-sm font-medium text-text-primary hover:bg-muted hover:text-primary transition-all duration-300"
               >
                 <Icon name="MoreHorizontal" size={18} />
-                <span className="font-bengali">আরও</span>
+                <span className={language === 'bn' ? 'font-bengali' : ''}>{language === 'bn' ? 'আরও' : 'More'}</span>
               </button>
 
               {/* Dropdown Menu */}
@@ -124,7 +129,7 @@ const Header = ({ className = '' }) => {
                         }`}
                       >
                         <Icon name={item?.icon} size={16} />
-                        <span className="font-bengali">{item?.name}</span>
+                        <span className={language === 'bn' ? 'font-bengali' : ''}>{item?.name}</span>
                       </button>
                     ))}
                     <div className="border-t border-border my-2"></div>
@@ -144,6 +149,7 @@ const Header = ({ className = '' }) => {
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center space-x-2">
+            <LanguageToggle className="mr-2" />
             <Button
               variant="destructive"
               size="sm"
@@ -151,7 +157,7 @@ const Header = ({ className = '' }) => {
               className="heartbeat"
               onClick={() => handleNavigation('/blood-requests')}
             >
-              <span className="font-bengali text-xs">জরুরি</span>
+              <span className={`text-xs ${language === 'bn' ? 'font-bengali' : ''}`}>{t('emergency', language)}</span>
             </Button>
             
             <button

@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useTranslation } from '../../../hooks/useTranslation';
+import { formatNumber } from '../../../utils/numberUtils';
 
 const UrgentRequestsTicker = () => {
   const navigate = useNavigate();
+  const { t, isBengali } = useTranslation();
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const urgentRequests = [
@@ -184,7 +187,7 @@ const UrgentRequestsTicker = () => {
                   className="flex-1"
                   onClick={() => window.open(`tel:${urgentRequests?.[currentIndex]?.contact}`)}
                 >
-                  <span className="font-bengali">কল করুন</span>
+                  <span className={isBengali ? 'font-bengali' : ''}>{t('call')}</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -194,7 +197,7 @@ const UrgentRequestsTicker = () => {
                   className="flex-1"
                   onClick={() => navigate('/blood-requests')}
                 >
-                  <span className="font-bengali">বিস্তারিত</span>
+                  <span className={isBengali ? 'font-bengali' : ''}>{isBengali ? 'বিস্তারিত' : 'Details'}</span>
                 </Button>
               </div>
             </div>
@@ -218,23 +221,23 @@ const UrgentRequestsTicker = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
           <div className="bg-red-50 rounded-xl p-4 text-center">
             <Icon name="AlertTriangle" size={24} className="text-red-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-red-600">১৮</p>
-            <p className="text-sm text-text-secondary font-bengali">জরুরি অনুরোধ</p>
+            <p className="text-2xl font-bold text-red-600">{formatNumber(18, isBengali ? 'bn' : 'en')}</p>
+            <p className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'জরুরি অনুরোধ' : 'Urgent Requests'}</p>
           </div>
           <div className="bg-blue-50 rounded-xl p-4 text-center">
             <Icon name="Clock" size={24} className="text-blue-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-blue-600">২৪/৭</p>
-            <p className="text-sm text-text-secondary font-bengali">সেবা সময়</p>
+            <p className="text-2xl font-bold text-blue-600">{isBengali ? '২৪/৭' : '24/7'}</p>
+            <p className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'সেবা সময়' : 'Service Time'}</p>
           </div>
           <div className="bg-green-50 rounded-xl p-4 text-center">
             <Icon name="MapPin" size={24} className="text-green-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-green-600">৬৪</p>
-            <p className="text-sm text-text-secondary font-bengali">জেলায় সেবা</p>
+            <p className="text-2xl font-bold text-green-600">{formatNumber(64, isBengali ? 'bn' : 'en')}</p>
+            <p className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'জেলায় সেবা' : 'Districts Served'}</p>
           </div>
           <div className="bg-purple-50 rounded-xl p-4 text-center">
             <Icon name="Users" size={24} className="text-purple-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-purple-600">৯৮%</p>
-            <p className="text-sm text-text-secondary font-bengali">সফল সংযোগ</p>
+            <p className="text-2xl font-bold text-purple-600">{formatNumber(98, isBengali ? 'bn' : 'en')}%</p>
+            <p className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'সফল সংযোগ' : 'Success Rate'}</p>
           </div>
         </div>
 
@@ -248,7 +251,7 @@ const UrgentRequestsTicker = () => {
             className="px-8 py-4 text-lg shadow-brand hover:shadow-brand-lg transition-all duration-300"
             onClick={() => navigate('/blood-requests')}
           >
-            <span className="font-bengali">সব অনুরোধ দেখুন</span>
+            <span className={isBengali ? 'font-bengali' : ''}>{isBengali ? 'সব অনুরোধ দেখুন' : 'View All Requests'}</span>
           </Button>
         </div>
       </div>

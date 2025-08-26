@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { donorService } from '../../../lib/donorService';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 
 const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergencyMode }) => {
+  const { t, isBengali } = useTranslation();
   const [bloodGroupCounts, setBloodGroupCounts] = useState({});
   const [loading, setLoading] = useState(true);
 
@@ -46,13 +48,13 @@ const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergenc
   return (
     <div className="bg-white rounded-xl shadow-brand p-6 mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bengali font-semibold text-text-primary">
-          রক্তের গ্রুপ নির্বাচন করুন
+        <h2 className={`text-xl font-semibold text-text-primary ${isBengali ? 'font-bengali' : ''}`}>
+          {t('selectBloodGroup')}
         </h2>
         {isEmergencyMode && (
           <div className="flex items-center space-x-2 text-destructive">
             <div className="w-2 h-2 bg-destructive rounded-full animate-pulse"></div>
-            <span className="text-sm font-bengali font-medium">জরুরি মোড</span>
+            <span className={`text-sm font-medium ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'জরুরি মোড' : 'Emergency Mode'}</span>
           </div>
         )}
       </div>
@@ -72,8 +74,8 @@ const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergenc
                 {blood?.group}
               </div>
               <span className="text-sm font-medium text-text-primary">{blood?.group}</span>
-              <span className="text-xs text-muted-foreground font-bengali">
-                {loading ? '...' : (bloodGroupCounts[blood?.group] || 0)} জন উপলব্ধ
+              <span className={`text-xs text-muted-foreground ${isBengali ? 'font-bengali' : ''}`}>
+                {loading ? '...' : `${bloodGroupCounts[blood?.group] || 0} ${t('people')} ${t('available')}`}
               </span>
             </div>
             
@@ -86,8 +88,8 @@ const BloodGroupSelector = ({ selectedBloodGroup, onBloodGroupSelect, isEmergenc
         ))}
       </div>
       <div className="mt-4 p-3 bg-muted rounded-lg">
-        <p className="text-sm text-muted-foreground font-bengali text-center">
-          💡 টিপস: O- সর্বজনীন দাতা, AB+ সর্বজনীন গ্রহীতা
+        <p className={`text-sm text-muted-foreground text-center ${isBengali ? 'font-bengali' : ''}`}>
+          💡 {isBengali ? 'টিপস: O- সর্বজনীন দাতা, AB+ সর্বজনীন গ্রহীতা' : 'Tips: O- universal donor, AB+ universal recipient'}
         </p>
       </div>
     </div>

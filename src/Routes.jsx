@@ -9,13 +9,15 @@ import AdminDashboard from './pages/admin-dashboard';
 import DonorDashboard from './pages/donor-dashboard';
 import FindDonors from './pages/find-donors';
 import Homepage from './pages/homepage';
+import { LanguageProvider } from './contexts/LanguageContext';
 
 const Routes = () => {
   return (
     <BrowserRouter>
-      <ErrorBoundary>
-      <ScrollToTop />
-      <RouterRoutes>
+      <LanguageProvider>
+        <ErrorBoundary>
+        <ScrollToTop />
+        <RouterRoutes>
         {/* Define your route here */}
         <Route path="/" element={<Homepage />} />
         <Route path="/blood-requests" element={<BloodRequestsPage />} />
@@ -25,8 +27,9 @@ const Routes = () => {
         <Route path="/find-donors" element={<FindDonors />} />
         <Route path="/homepage" element={<Homepage />} />
         <Route path="*" element={<NotFound />} />
-      </RouterRoutes>
-      </ErrorBoundary>
+        </RouterRoutes>
+        </ErrorBoundary>
+      </LanguageProvider>
     </BrowserRouter>
   );
 };

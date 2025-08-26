@@ -8,8 +8,10 @@ import UrgentRequestsTicker from './components/UrgentRequestsTicker';
 import ImpactDashboard from './components/ImpactDashboard';
 import SuccessStoriesCarousel from './components/SuccessStoriesCarousel';
 import Footer from './components/Footer';
+import { useTranslation } from '../../hooks/useTranslation';
 
 const Homepage = () => {
+  const { t, language, isBengali } = useTranslation();
   const [stats, setStats] = useState({
     totalDonors: 0,
     livesSaved: 0,
@@ -47,7 +49,7 @@ const Homepage = () => {
   return (
     <div className="min-h-screen bg-background">
       <Helmet>
-        <title>LifeLink Bangladesh - আপনার রক্ত, তাদের আশা | বাংলাদেশের বিশ্বস্ত রক্তদান প্ল্যাটফর্ম</title>
+        <title>{isBengali ? 'LifeLink Bangladesh - আপনার রক্ত, তাদের আশা | বাংলাদেশের বিশ্বস্ত রক্তদান প্ল্যাটফর্ম' : 'LifeLink Bangladesh - Your Blood, Their Hope | Trusted Blood Donation Platform'}</title>
         <meta 
           name="description" 
           content="বাংলাদেশের সবচেয়ে বিশ্বস্ত রক্তদান প্ল্যাটফর্ম। জরুরি মুহূর্তে রক্তের প্রয়োজনে দাতা ও গ্রহীতার মধ্যে সেতুবন্ধন। ১২৪৭+ দাতা, ৫২৩+ জীবন বাঁচানো, ৬৪ জেলায় সেবা।" 

@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
+import { useTranslation } from '../../../hooks/useTranslation';
 
 const ImpactDashboard = () => {
   const navigate = useNavigate();
+  const { t, isBengali } = useTranslation();
   const [animatedStats, setAnimatedStats] = useState({
     totalDonors: 0,
     livesSaved: 0,
@@ -53,43 +55,43 @@ const ImpactDashboard = () => {
   const impactMetrics = [
     {
       id: 1,
-      title: "নিবন্ধিত রক্তদাতা",
+      title: isBengali ? "নিবন্ধিত রক্তদাতা" : "Registered Donors",
       value: animatedStats?.totalDonors,
       suffix: "+",
       icon: "Users",
       color: "text-blue-600",
       bgColor: "bg-blue-50",
-      description: "সক্রিয় ও যাচাইকৃত দাতা"
+      description: isBengali ? "সক্রিয় ও যাচাইকৃত দাতা" : "Active & Verified Donors"
     },
     {
       id: 2,
-      title: "জীবন বাঁচানো হয়েছে",
+      title: isBengali ? "জীবন বাঁচানো হয়েছে" : "Lives Saved",
       value: animatedStats?.livesSaved,
       suffix: "+",
       icon: "Heart",
       color: "text-red-600",
       bgColor: "bg-red-50",
-      description: "সফল রক্তদানের মাধ্যমে"
+      description: isBengali ? "সফল রক্তদানের মাধ্যমে" : "Through Successful Donations"
     },
     {
       id: 3,
-      title: "জেলায় সেবা",
+      title: isBengali ? "জেলায় সেবা" : "Districts Served",
       value: animatedStats?.districtsCovered,
       suffix: "/৬৪",
       icon: "MapPin",
       color: "text-green-600",
       bgColor: "bg-green-50",
-      description: "সারাদেশে নেটওয়ার্ক"
+      description: isBengali ? "সারাদেশে নেটওয়ার্ক" : "Nationwide Network"
     },
     {
       id: 4,
-      title: "সফল সংযোগ",
+      title: isBengali ? "সফল সংযোগ" : "Success Rate",
       value: animatedStats?.successfulConnections,
       suffix: "%",
       icon: "TrendingUp",
       color: "text-purple-600",
       bgColor: "bg-purple-50",
-      description: "অনুরোধ পূরণের হার"
+      description: isBengali ? "অনুরোধ পূরণের হার" : "Request Fulfillment Rate"
     }
   ];
 
@@ -109,13 +111,13 @@ const ImpactDashboard = () => {
         <div className="text-center mb-12">
           <div className="inline-flex items-center space-x-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
             <Icon name="BarChart3" size={16} className="text-primary" />
-            <span className="text-sm font-medium text-primary font-bengali">প্রভাব ড্যাশবোর্ড</span>
+            <span className={`text-sm font-medium text-primary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'প্রভাব ড্যাশবোর্ড' : 'Impact Dashboard'}</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-bold text-text-primary font-bengali mb-4">
-            আমাদের সম্মিলিত প্রভাব
+          <h2 className={`text-3xl sm:text-4xl font-bold text-text-primary mb-4 ${isBengali ? 'font-bengali' : ''}`}>
+            {isBengali ? 'আমাদের সম্মিলিত প্রভাব' : 'Our Collective Impact'}
           </h2>
-          <p className="text-lg text-text-secondary font-bengali max-w-2xl mx-auto">
-            স্বচ্ছতার সাথে আমরা দেখাচ্ছি কীভাবে আপনাদের অংশগ্রহণ বাংলাদেশে জীবন বাঁচাচ্ছে
+          <p className={`text-lg text-text-secondary max-w-2xl mx-auto ${isBengali ? 'font-bengali' : ''}`}>
+            {isBengali ? 'স্বচ্ছতার সাথে আমরা দেখাচ্ছি কীভাবে আপনাদের অংশগ্রহণ বাংলাদেশে জীবন বাঁচাচ্ছে' : 'Transparently showing how your participation is saving lives in Bangladesh'}
           </p>
         </div>
 
@@ -138,10 +140,10 @@ const ImpactDashboard = () => {
                   </div>
                 </div>
               </div>
-              <h3 className="text-lg font-bold text-text-primary font-bengali mb-1">
+              <h3 className={`text-lg font-bold text-text-primary mb-1 ${isBengali ? 'font-bengali' : ''}`}>
                 {metric?.title}
               </h3>
-              <p className="text-sm text-text-secondary font-bengali">
+              <p className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>
                 {metric?.description}
               </p>
             </div>
@@ -152,21 +154,21 @@ const ImpactDashboard = () => {
         <div className="bg-white rounded-2xl p-8 shadow-brand mb-12">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h3 className="text-2xl font-bold text-text-primary font-bengali mb-2">
-                মাসিক প্রবণতা
+              <h3 className={`text-2xl font-bold text-text-primary mb-2 ${isBengali ? 'font-bengali' : ''}`}>
+                {isBengali ? 'মাসিক প্রবণতা' : 'Monthly Trends'}
               </h3>
-              <p className="text-text-secondary font-bengali">
-                গত ৬ মাসের রক্তদান ও অনুরোধের তুলনা
+              <p className={`text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>
+                {isBengali ? 'গত ৬ মাসের রক্তদান ও অনুরোধের তুলনা' : 'Comparison of blood donations and requests over the last 6 months'}
               </p>
             </div>
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-primary rounded-full"></div>
-                <span className="text-sm text-text-secondary font-bengali">রক্তদান</span>
+                <span className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'রক্তদান' : 'Donations'}</span>
               </div>
               <div className="flex items-center space-x-2">
                 <div className="w-3 h-3 bg-secondary rounded-full"></div>
-                <span className="text-sm text-text-secondary font-bengali">অনুরোধ</span>
+                <span className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{isBengali ? 'অনুরোধ' : 'Requests'}</span>
               </div>
             </div>
           </div>
@@ -207,8 +209,8 @@ const ImpactDashboard = () => {
         {/* Blood Group Distribution */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <div className="bg-white rounded-2xl p-8 shadow-brand">
-            <h3 className="text-xl font-bold text-text-primary font-bengali mb-6">
-              রক্তের গ্রুপ বিতরণ
+            <h3 className={`text-xl font-bold text-text-primary mb-6 ${isBengali ? 'font-bengali' : ''}`}>
+              {isBengali ? 'রক্তের গ্রুপ বিতরণ' : 'Blood Group Distribution'}
             </h3>
             <div className="space-y-4">
               {[
@@ -225,7 +227,7 @@ const ImpactDashboard = () => {
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                       <span className="text-white text-xs font-bold">{item?.group}</span>
                     </div>
-                    <span className="font-medium text-text-primary">{item?.count} দাতা</span>
+                    <span className={`font-medium text-text-primary ${isBengali ? 'font-bengali' : ''}`}>{item?.count} {isBengali ? 'দাতা' : 'donors'}</span>
                   </div>
                   <div className="flex items-center space-x-2">
                     <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
@@ -242,8 +244,8 @@ const ImpactDashboard = () => {
           </div>
 
           <div className="bg-white rounded-2xl p-8 shadow-brand">
-            <h3 className="text-xl font-bold text-text-primary font-bengali mb-6">
-              আঞ্চলিক কভারেজ
+            <h3 className={`text-xl font-bold text-text-primary mb-6 ${isBengali ? 'font-bengali' : ''}`}>
+              {isBengali ? 'আঞ্চলিক কভারেজ' : 'Regional Coverage'}
             </h3>
             <div className="space-y-4">
               {[
@@ -259,10 +261,10 @@ const ImpactDashboard = () => {
                 <div key={item?.division} className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className={`w-4 h-4 ${item?.color} rounded-full`}></div>
-                    <span className="font-medium text-text-primary font-bengali">{item?.division}</span>
+                    <span className={`font-medium text-text-primary ${isBengali ? 'font-bengali' : ''}`}>{item?.division}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-sm text-text-secondary">{item?.donors} দাতা</span>
+                    <span className={`text-sm text-text-secondary ${isBengali ? 'font-bengali' : ''}`}>{item?.donors} {isBengali ? 'দাতা' : 'donors'}</span>
                     <div className="w-16 h-2 bg-gray-200 rounded-full overflow-hidden">
                       <div 
                         className={`h-full ${item?.color} rounded-full transition-all duration-1000`}
@@ -279,11 +281,11 @@ const ImpactDashboard = () => {
         {/* Call to Action */}
         <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-8 text-center text-white">
           <Icon name="Target" size={48} className="mx-auto mb-4 opacity-80" />
-          <h3 className="text-2xl font-bold font-bengali mb-4">
-            আমাদের লক্ষ্য: ২০২৫ সালের মধ্যে ৫০০০ দাতা
+          <h3 className={`text-2xl font-bold mb-4 ${isBengali ? 'font-bengali' : ''}`}>
+            {isBengali ? 'আমাদের লক্ষ্য: ২০২৫ সালের মধ্যে ৫০০০ দাতা' : 'Our Goal: 5000 Donors by 2025'}
           </h3>
-          <p className="text-lg opacity-90 font-bengali mb-6 max-w-2xl mx-auto">
-            আপনিও এই মহৎ উদ্দেশ্যে অংশ নিন। একসাথে আমরা বাংলাদেশে রক্তের সংকট দূর করতে পারি।
+          <p className={`text-lg opacity-90 mb-6 max-w-2xl mx-auto ${isBengali ? 'font-bengali' : ''}`}>
+            {isBengali ? 'আপনিও এই মহৎ উদ্দেশ্যে অংশ নিন। একসাথে আমরা বাংলাদেশে রক্তের সংকট দূর করতে পারি।' : 'Join us in this noble cause. Together we can eliminate blood shortage in Bangladesh.'}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button
@@ -294,7 +296,7 @@ const ImpactDashboard = () => {
               className="px-8 py-4"
               onClick={() => navigate('/donor-registration')}
             >
-              <span className="font-bengali">রক্তদাতা হন</span>
+              <span className={isBengali ? 'font-bengali' : ''}>{t('becomeDonor')}</span>
             </Button>
             <Button
               variant="outline"
@@ -312,7 +314,7 @@ const ImpactDashboard = () => {
                 }
               }}
             >
-              <span className="font-bengali">শেয়ার করুন</span>
+              <span className={isBengali ? 'font-bengali' : ''}>{isBengali ? 'শেয়ার করুন' : 'Share'}</span>
             </Button>
           </div>
         </div>

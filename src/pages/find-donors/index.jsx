@@ -4,6 +4,8 @@ import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import { donorService } from '../../lib/donorService';
+import { useLanguage } from '../../contexts/LanguageContext';
+import { t } from '../../utils/translations';
 import BloodGroupSelector from './components/BloodGroupSelector';
 import LocationSelector from './components/LocationSelector';
 import AdvancedFilters from './components/AdvancedFilters';
@@ -13,6 +15,7 @@ import QuickActions from './components/QuickActions';
 
 const FindDonors = () => {
   const navigate = useNavigate();
+  const { language } = useLanguage();
   const [selectedBloodGroup, setSelectedBloodGroup] = useState('');
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [filters, setFilters] = useState({});
@@ -176,8 +179,8 @@ const FindDonors = () => {
               <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
                 <Icon name="Search" size={24} color="white" />
               </div>
-              <h1 className="text-3xl font-bengali font-bold text-text-primary">
-                রক্তদাতা খুঁজুন
+              <h1 className={`text-3xl font-bold text-text-primary ${language === 'bn' ? 'font-bengali' : ''}`}>
+                {t('findDonors', language)}
               </h1>
             </div>
             <p className="text-muted-foreground font-bengali max-w-2xl mx-auto">
