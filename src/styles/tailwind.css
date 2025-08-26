@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core Colors */
+    --color-background: #FAFAFA; /* gray-50 */
+    --color-foreground: #1A1A1A; /* gray-900 */
+    --color-border: #E5E5E5; /* gray-300 */
+    --color-input: #FFFFFF; /* white */
+    --color-ring: #C41E3A; /* red-700 */
+    
+    /* Card Colors */
+    --color-card: #FFFFFF; /* white */
+    --color-card-foreground: #1A1A1A; /* gray-900 */
+    
+    /* Popover Colors */
+    --color-popover: #FFFFFF; /* white */
+    --color-popover-foreground: #1A1A1A; /* gray-900 */
+    
+    /* Muted Colors */
+    --color-muted: #F5F5F5; /* gray-100 */
+    --color-muted-foreground: #666666; /* gray-500 */
+    
+    /* Primary Colors */
+    --color-primary: #C41E3A; /* red-700 */
+    --color-primary-foreground: #FFFFFF; /* white */
+    
+    /* Secondary Colors */
+    --color-secondary: #228B22; /* green-600 */
+    --color-secondary-foreground: #FFFFFF; /* white */
+    
+    /* Destructive Colors */
+    --color-destructive: #EF4444; /* red-500 */
+    --color-destructive-foreground: #FFFFFF; /* white */
+    
+    /* Accent Colors */
+    --color-accent: #FF6B35; /* orange-500 */
+    --color-accent-foreground: #FFFFFF; /* white */
+    
+    /* Success Colors */
+    --color-success: #10B981; /* emerald-500 */
+    --color-success-foreground: #FFFFFF; /* white */
+    
+    /* Warning Colors */
+    --color-warning: #F59E0B; /* amber-500 */
+    --color-warning-foreground: #FFFFFF; /* white */
+    
+    /* Error Colors */
+    --color-error: #EF4444; /* red-500 */
+    --color-error-foreground: #FFFFFF; /* white */
+    
+    /* Trust Builder */
+    --color-trust: #2E5BBA; /* blue-600 */
+    --color-trust-foreground: #FFFFFF; /* white */
+    
+    /* Text Colors */
+    --color-text-primary: #1A1A1A; /* gray-900 */
+    --color-text-secondary: #666666; /* gray-500 */
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Noto Sans Bengali', 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .font-bengali {
+    font-family: 'Noto Sans Bengali', sans-serif;
+  }
+  
+  .font-inter {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .text-bengali-light {
+    font-family: 'Noto Sans Bengali', sans-serif;
+    font-weight: 300;
+  }
+  
+  .text-bengali-regular {
+    font-family: 'Noto Sans Bengali', sans-serif;
+    font-weight: 400;
+  }
+  
+  .text-bengali-semibold {
+    font-family: 'Noto Sans Bengali', sans-serif;
+    font-weight: 600;
+  }
+  
+  .text-bengali-bold {
+    font-family: 'Noto Sans Bengali', sans-serif;
+    font-weight: 700;
+  }
+  
+  .shadow-brand {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .transition-brand {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .heartbeat {
+    animation: heartbeat 1s ease-in-out infinite;
+  }
+  
+  .float-up {
+    animation: floatUp 3s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes floatUp {
+  0%, 100% {
+    transform: translateY(0px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
