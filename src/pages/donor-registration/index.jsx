@@ -133,10 +133,18 @@ const DonorRegistration = () => {
     setIsSubmitting(true);
     
     try {
-      // Check if donor already exists
-      const existingDonor = await donorService.getDonorByMobile(formData.mobile);
-      if (existingDonor) {
-        setErrors({ mobile: 'এই নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে' });
+      // Check if mobile number already exists
+      const existingMobileDonor = await donorService.getDonorByMobile(formData.mobile);
+      if (existingMobileDonor) {
+        setErrors({ mobile: '⚠️ এই মোবাইল নম্বর দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে। অন্য নম্বর ব্যবহার করুন বা লগইন করুন।' });
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Check if email already exists
+      const existingEmailDonor = await donorService.getDonorByEmail(formData.email);
+      if (existingEmailDonor) {
+        setErrors({ email: '⚠️ এই ইমেইল ঠিকানা দিয়ে ইতিমধ্যে নিবন্ধন করা হয়েছে। অন্য ইমেইল ব্যবহার করুন বা লগইন করুন।' });
         setIsSubmitting(false);
         return;
       }
@@ -146,10 +154,18 @@ const DonorRegistration = () => {
       setFormData(prev => ({ ...prev, donorId: newDonor.id }));
       
       // Auto login the user using AuthContext
-      await login(formData.email);
+      console.log('Attempting auto-login with email:', formData.email);
+      const loginResult = await login(formData.email);
+      console.log('Login result:', loginResult);
       
-      // Redirect to dashboard
-      navigate('/donor-dashboard');
+      if (loginResult.success) {
+        console.log('Login successful, redirecting to dashboard');
+        navigate('/donor-dashboard');
+      } else {
+        console.log('Login failed:', loginResult.error);
+        // If auto-login fails, still redirect to login page
+        navigate('/donor-login');
+      }
     } catch (error) {
       console.error('Registration error:', error);
       setErrors({ submit: 'নিবন্ধনে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।' });

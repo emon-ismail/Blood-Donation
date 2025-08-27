@@ -27,6 +27,18 @@ export const donorService = {
     return data || []
   },
 
+  // Calculate distance between two coordinates
+  calculateDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  },
+
   // Search donors by blood group and location
   async searchDonors(filters = {}) {
     console.log('Search filters:', filters)
@@ -56,13 +68,33 @@ export const donorService = {
       query = query.eq('availability', filters.availability)
     }
 
+    // Search by detailed address if provided
+    if (filters.searchArea) {
+      query = query.or(`detailed_address.ilike.%${filters.searchArea}%,address.ilike.%${filters.searchArea}%,upazila.ilike.%${filters.searchArea}%`)
+    }
+
     const { data, error } = await query.order('created_at', { ascending: false })
     
-    console.log('Search results:', data)
-    console.log('Sample donor districts:', data?.slice(0, 3)?.map(d => ({ name: d.full_name, district: d.district, upazila: d.upazila })))
-
     if (error) throw error
-    return data || []
+    
+    let results = data || [];
+    
+    // Apply distance filter if location and radius are provided
+    if (filters.location && filters.location.lat && filters.location.lng && filters.location.radius) {
+      results = results.filter(donor => {
+        if (!donor.latitude || !donor.longitude) return true; // Include donors without GPS
+        const distance = this.calculateDistance(
+          filters.location.lat,
+          filters.location.lng,
+          donor.latitude,
+          donor.longitude
+        );
+        return distance <= filters.location.radius;
+      });
+    }
+    
+    console.log('Search results:', results)
+    return results
   },
 
   // Create new donor
@@ -85,6 +117,9 @@ export const donorService = {
         phone_calls_allowed: donorData.phoneCallsAllowed,
         whatsapp_allowed: donorData.whatsappAllowed,
         emergency_contact_allowed: donorData.emergencyContactAllowed,
+        latitude: donorData.latitude || null,
+        longitude: donorData.longitude || null,
+        detailed_address: donorData.address,
         is_verified: true,
         created_at: new Date().toISOString()
       }])

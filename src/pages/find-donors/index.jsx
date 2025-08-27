@@ -89,27 +89,46 @@ const FindDonors = () => {
     try {
       const donors = await donorService.searchDonors(searchFilters);
       
-      // Transform data for display
-      const transformedDonors = donors.map(donor => ({
-        id: donor.id,
-        name: donor.full_name,
-        bloodGroup: donor.blood_group,
-        location: `${donor.upazila}, ${donor.district}`,
-        distance: '0.0',
-        availability: donor.availability || 'available',
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`,
-        totalDonations: 0,
-        responseTime: '১৫ মিনিট',
-        rating: '4.5',
-        age: donor.age,
-        gender: donor.gender === 'male' ? 'পুরুষ' : 'মহিলা',
-        lastDonation: '2024-06-15',
-        joinedDate: new Date(donor.created_at).toLocaleDateString('bn-BD'),
-        isVerified: donor.is_verified,
-        bio: 'নিবন্ধিত রক্তদাতা',
-        achievements: ['নতুন দাতা'],
-        mobile: donor.mobile
-      }));
+      // Transform data for display with real distance calculation
+      const transformedDonors = donors.map(donor => {
+        let calculatedDistance = '0.0';
+        
+        // Calculate real distance if both locations have GPS coordinates
+        if (searchFilters.location && searchFilters.location.lat && searchFilters.location.lng && 
+            donor.latitude && donor.longitude) {
+          const distance = donorService.calculateDistance(
+            searchFilters.location.lat,
+            searchFilters.location.lng,
+            donor.latitude,
+            donor.longitude
+          );
+          calculatedDistance = distance.toFixed(1);
+          console.log(`Distance calculated for ${donor.full_name}: ${calculatedDistance} km`);
+        } else {
+          console.log(`Missing GPS data - Search location: ${searchFilters.location?.lat}, ${searchFilters.location?.lng}, Donor: ${donor.latitude}, ${donor.longitude}`);
+        }
+        
+        return {
+          id: donor.id,
+          name: donor.full_name,
+          bloodGroup: donor.blood_group,
+          location: `${donor.upazila}, ${donor.district}`,
+          distance: calculatedDistance,
+          availability: donor.availability || 'available',
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`,
+          totalDonations: 0,
+          responseTime: '১৫ মিনিট',
+          rating: '4.5',
+          age: donor.age,
+          gender: donor.gender === 'male' ? 'পুরুষ' : 'মহিলা',
+          lastDonation: '2024-06-15',
+          joinedDate: new Date(donor.created_at).toLocaleDateString('bn-BD'),
+          isVerified: donor.is_verified,
+          bio: 'নিবন্ধিত রক্তদাতা',
+          achievements: ['নতুন দাতা'],
+          mobile: donor.mobile
+        };
+      });
 
       // Apply pagination to search results
       const startIndex = (page - 1) * donorsPerPage;
@@ -139,6 +158,7 @@ const FindDonors = () => {
       district: selectedLocation?.district || selectedLocation?.name,
       upazila: selectedLocation?.upazila,
       availability: filters?.availability,
+      searchArea: selectedLocation?.searchArea,
       location: selectedLocation
     };
     

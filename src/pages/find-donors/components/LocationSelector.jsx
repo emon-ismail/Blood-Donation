@@ -159,7 +159,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
                     type: 'manual',
                     district: selectedDistrict,
                     upazila: upazila?.label,
-                    name: `${upazila?.label}, ${districtObj?.label}`
+                    name: `${upazila?.label}, ${districtObj?.label}`,
+                    radius: selectedLocation?.radius || 10
                   });
                 }
               }}
@@ -191,7 +192,8 @@ const LocationSelector = ({ selectedLocation, onLocationSelect, isEmergencyMode 
                 onLocationSelect({
                   type: 'search',
                   name: e.target.value,
-                  district: selectedDistrict
+                  district: selectedDistrict,
+                  searchArea: e.target.value
                 });
               }
             }}
