@@ -176,7 +176,7 @@ const AdminDashboard = () => {
                   />
                 ))}
               </div>
-            )
+            )}
             {/* Quick Actions */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <Button variant="default" iconName="UserPlus" onClick={() => setSelectedView('donors')} size="sm" className="text-xs sm:text-sm">
