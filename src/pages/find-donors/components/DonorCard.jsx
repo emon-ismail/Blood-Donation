@@ -1,10 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Image from '../../../components/AppImage';
+import StarRating from '../../../components/ui/StarRating';
+import RatingModal from '../../../components/RatingModal';
+import { donorService } from '../../../lib/donorService';
+import { useAuth } from '../../../contexts/AuthContext';
 
 const DonorCard = ({ donor, onContact, onQuickCall, onWhatsApp, isEmergencyMode }) => {
+  const { user } = useAuth();
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [donorRatings, setDonorRatings] = useState([]);
+  const [showReviews, setShowReviews] = useState(false);
+  const [ratingsCount, setRatingsCount] = useState(0);
+
+  useEffect(() => {
+    if (donor.rating > 0) {
+      donorService.getDonorRatings(donor.id).then(ratings => {
+        setRatingsCount(ratings.length);
+      });
+    }
+  }, [donor.id, donor.rating]);
+
+  const handleRating = async () => {
+    if (!user?.id) {
+      alert('রেটিং দিতে আগে লগইন করুন');
+      return;
+    }
+
+    try {
+      const hasRated = await donorService.hasUserRated(donor.id, user.id);
+      if (hasRated) {
+        alert('আপনি ইতিমধ্যে এই দাতাকে রেটিং দিয়েছেন');
+        return;
+      }
+      setShowRatingModal(true);
+    } catch (error) {
+      console.error('Error checking rating:', error);
+      setShowRatingModal(true);
+    }
+  };
+
+  const handleRatingSubmit = async (ratingData) => {
+    try {
+      const result = await donorService.addRating(ratingData);
+      // Update local donor rating immediately
+      donor.rating = parseFloat(result.newRating);
+      alert('ধন্যবাদ! আপনার রেটিং সংরক্ষিত হয়েছে।');
+      // Force re-render by updating parent component
+      window.location.reload();
+    } catch (error) {
+      throw error;
+    }
+  };
 
   const getAvailabilityStatus = (status) => {
     switch (status) {
@@ -100,8 +149,13 @@ const DonorCard = ({ donor, onContact, onQuickCall, onWhatsApp, isEmergencyMode 
             <div className="text-xs text-muted-foreground font-bengali">সাড়া সময়</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-accent">{donor?.rating}</div>
-            <div className="text-xs text-muted-foreground font-bengali">রেটিং</div>
+            <StarRating 
+              rating={parseFloat(donor?.rating)} 
+              size={14} 
+              showValue={false}
+              className="justify-center"
+            />
+            <div className="text-xs text-muted-foreground font-bengali mt-1">{donor?.rating} রেটিং</div>
           </div>
         </div>
 
@@ -190,6 +244,51 @@ const DonorCard = ({ donor, onContact, onQuickCall, onWhatsApp, isEmergencyMode 
               </div>
             )}
 
+            {/* Reviews Section */}
+            {donor.rating > 0 && (
+              <div className="pt-4 border-t border-border">
+                <button
+                  onClick={async () => {
+                    if (!showReviews) {
+                      const ratings = await donorService.getDonorRatings(donor.id);
+                      setDonorRatings(ratings);
+                      setRatingsCount(ratings.length);
+                    }
+                    setShowReviews(!showReviews);
+                  }}
+                  className="flex items-center justify-between w-full text-left"
+                >
+                  <span className="text-sm font-medium text-text-primary font-bengali">
+                    রিভিউ দেখুন ({ratingsCount})
+                  </span>
+                  <Icon name={showReviews ? "ChevronUp" : "ChevronDown"} size={16} />
+                </button>
+                
+                {showReviews && (
+                  <div className="mt-3 space-y-3 max-h-40 overflow-y-auto">
+                    {donorRatings.map((rating, index) => (
+                      <div key={index} className="bg-muted/30 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <StarRating rating={rating.rating} size={12} showValue={false} />
+                            <span className="text-xs font-medium">{rating.reviewer_name}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(rating.created_at).toLocaleDateString('bn-BD')}
+                          </span>
+                        </div>
+                        {rating.comment && (
+                          <p className="text-xs text-muted-foreground font-bengali">
+                            "{rating.comment}"
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Contact Options */}
             <div className="pt-4 border-t border-border">
               <div className="grid grid-cols-1 gap-2">
@@ -214,11 +313,30 @@ const DonorCard = ({ donor, onContact, onQuickCall, onWhatsApp, isEmergencyMode 
                 >
                   SMS পাঠান
                 </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  iconName="Star"
+                  iconPosition="left"
+                  onClick={handleRating}
+                  className="font-bengali"
+                >
+                  রেটিং দিন
+                </Button>
               </div>
             </div>
           </div>
         </div>
       )}
+      
+      {/* Rating Modal */}
+      <RatingModal
+        isOpen={showRatingModal}
+        onClose={() => setShowRatingModal(false)}
+        donor={donor}
+        onSubmit={handleRatingSubmit}
+      />
     </div>
   );
 };

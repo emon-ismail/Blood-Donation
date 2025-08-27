@@ -45,26 +45,40 @@ const FindDonors = () => {
       const allDonors = await donorService.getAllDonors();
       
       // Transform data for display
-      const transformedDonors = donors.map(donor => ({
-        id: donor.id,
-        name: donor.full_name,
-        bloodGroup: donor.blood_group,
-        location: `${donor.upazila}, ${donor.district}`,
-        distance: '0.0',
-        availability: donor.availability || 'available',
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`,
-        totalDonations: 0,
-        responseTime: '১৫ মিনিট',
-        rating: '4.5',
-        age: donor.age,
-        gender: donor.gender === 'male' ? 'পুরুষ' : 'মহিলা',
-        lastDonation: '2024-06-15',
-        joinedDate: new Date(donor.created_at).toLocaleDateString('bn-BD'),
-        isVerified: donor.is_verified,
-        bio: 'নিবন্ধিত রক্তদাতা',
-        achievements: ['নতুন দাতা'],
-        mobile: donor.mobile
-      }));
+      const transformedDonors = donors.map(donor => {
+        // Calculate availability based on last donation
+        let availability = 'available';
+        if (donor.last_donation_date) {
+          const lastDonation = new Date(donor.last_donation_date);
+          const today = new Date();
+          const daysDiff = Math.floor((today - lastDonation) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff < 90) { // Less than 3 months
+            availability = 'recently_donated';
+          }
+        }
+        
+        return {
+          id: donor.id,
+          name: donor.full_name,
+          bloodGroup: donor.blood_group,
+          location: `${donor.upazila}, ${donor.district}`,
+          distance: '0.0',
+          availability: availability,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`,
+          totalDonations: donor.total_donations || 0,
+          responseTime: `${donor.response_time_minutes || 15} মিনিট`,
+          rating: parseFloat((donor.rating || 0).toFixed(1)),
+          age: donor.age,
+          gender: donor.gender === 'male' ? 'পুরুষ' : 'মহিলা',
+          lastDonation: '2024-06-15',
+          joinedDate: new Date(donor.created_at).toLocaleDateString('bn-BD'),
+          isVerified: donor.is_verified,
+          bio: 'নিবন্ধিত রক্তদাতা',
+          achievements: ['নতুন দাতা'],
+          mobile: donor.mobile
+        };
+      });
       
       setSearchResults(transformedDonors);
       setTotalDonors(allDonors.length);
@@ -103,9 +117,23 @@ const FindDonors = () => {
             donor.longitude
           );
           calculatedDistance = distance.toFixed(1);
-          console.log(`Distance calculated for ${donor.full_name}: ${calculatedDistance} km`);
-        } else {
-          console.log(`Missing GPS data - Search location: ${searchFilters.location?.lat}, ${searchFilters.location?.lng}, Donor: ${donor.latitude}, ${donor.longitude}`);
+        } else if (searchFilters.location && searchFilters.location.district && donor.district) {
+          // Fallback: Same district = 5km, different district = 50km
+          const searchDistrict = searchFilters.location.district.toLowerCase();
+          const donorDistrict = donor.district.toLowerCase();
+          calculatedDistance = searchDistrict === donorDistrict ? '5.0' : '50.0';
+        }
+        
+        // Calculate availability based on last donation
+        let availability = 'available';
+        if (donor.last_donation_date) {
+          const lastDonation = new Date(donor.last_donation_date);
+          const today = new Date();
+          const daysDiff = Math.floor((today - lastDonation) / (1000 * 60 * 60 * 24));
+          
+          if (daysDiff < 90) { // Less than 3 months
+            availability = 'recently_donated';
+          }
         }
         
         return {
@@ -114,11 +142,11 @@ const FindDonors = () => {
           bloodGroup: donor.blood_group,
           location: `${donor.upazila}, ${donor.district}`,
           distance: calculatedDistance,
-          availability: donor.availability || 'available',
+          availability: availability,
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`,
-          totalDonations: 0,
-          responseTime: '১৫ মিনিট',
-          rating: '4.5',
+          totalDonations: donor.total_donations || 0,
+          responseTime: `${donor.response_time_minutes || 15} মিনিট`,
+          rating: parseFloat((donor.rating || 0).toFixed(1)),
           age: donor.age,
           gender: donor.gender === 'male' ? 'পুরুষ' : 'মহিলা',
           lastDonation: '2024-06-15',

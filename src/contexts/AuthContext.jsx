@@ -14,12 +14,18 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [donorData, setDonorData] = useState(null);
 
   useEffect(() => {
     // Check if user is logged in on app start
     const savedUser = localStorage.getItem('donor_user');
     if (savedUser) {
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        console.error('Error parsing saved user:', error);
+        localStorage.removeItem('donor_user');
+      }
     }
     setLoading(false);
   }, []);
@@ -56,11 +62,17 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('donor_user');
   };
 
+  const updateDonorData = (data) => {
+    setDonorData(data);
+  };
+
   const value = {
     user,
     login,
     logout,
-    loading
+    loading,
+    donorData,
+    updateDonorData
   };
 
   return (

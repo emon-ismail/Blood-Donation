@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 import Input from '../../../components/ui/Input';
+import DonationModal from '../../../components/DonationModal';
 import { donorService } from '../../../lib/donorService';
 
 const DonorManagement = () => {
@@ -10,6 +11,35 @@ const DonorManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedDonors, setSelectedDonors] = useState([]);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [selectedDonor, setSelectedDonor] = useState(null);
+
+  const handleVerifyDonor = async (donorId) => {
+    try {
+      await donorService.verifyDonor(donorId);
+      loadDonors();
+      alert('দাতা সফলভাবে যাচাই করা হয়েছে!');
+    } catch (error) {
+      console.error('Failed to verify donor:', error);
+      alert('যাচাই করতে সমস্যা হয়েছে।');
+    }
+  };
+
+  const handleAddDonation = (donor) => {
+    setSelectedDonor(donor);
+    setShowDonationModal(true);
+  };
+
+  const handleDonationSubmit = async (donationData) => {
+    try {
+      await donorService.addDonation(selectedDonor.id, donationData);
+      loadDonors();
+      alert(`✅ ${selectedDonor.full_name} এর দান সফলভাবে রেকর্ড করা হয়েছে!`);
+    } catch (error) {
+      console.error('Failed to add donation:', error);
+      throw error;
+    }
+  };
 
   useEffect(() => {
     loadDonors();
@@ -17,11 +47,7 @@ const DonorManagement = () => {
 
   const loadDonors = async () => {
     try {
-      const donorData = await donorService.searchDonors({
-        bloodGroup: '',
-        location: '',
-        availability: 'all'
-      });
+      const donorData = await donorService.getAllDonors();
       setDonors(donorData);
     } catch (error) {
       console.error('Failed to load donors:', error);
@@ -55,14 +81,14 @@ const DonorManagement = () => {
     }
   ];
 
-  const displayDonors = donors.length > 0 ? donors : mockDonors;
-  
-  const filteredDonors = displayDonors?.filter(donor => {
-    const matchesSearch = donor?.name?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
-                         donor?.phone?.includes(searchTerm) ||
-                         donor?.bloodGroup?.includes(searchTerm) ||
-                         donor?.location?.toLowerCase()?.includes(searchTerm?.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || donor?.status === selectedStatus;
+  const filteredDonors = donors?.filter(donor => {
+    const matchesSearch = donor?.full_name?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+                         donor?.mobile?.includes(searchTerm) ||
+                         donor?.blood_group?.includes(searchTerm) ||
+                         donor?.district?.toLowerCase()?.includes(searchTerm?.toLowerCase()) ||
+                         donor?.upazila?.toLowerCase()?.includes(searchTerm?.toLowerCase());
+    const donorStatus = donor?.is_verified ? 'verified' : 'pending';
+    const matchesStatus = selectedStatus === 'all' || donorStatus === selectedStatus;
     return matchesSearch && matchesStatus;
   });
 
@@ -126,37 +152,67 @@ const DonorManagement = () => {
                   <tr key={donor?.id} className="border-b border-border hover:bg-muted/50">
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-3">
-                        <img
-                          src={donor?.avatar}
-                          alt={donor?.name}
-                          className="w-10 h-10 rounded-full object-cover"
-                        />
+                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-bold text-primary">
+                            {donor?.full_name?.charAt(0)?.toUpperCase()}
+                          </span>
+                        </div>
                         <div>
-                          <div className="font-medium text-text-primary font-bengali">{donor?.name}</div>
-                          <div className="text-sm text-muted-foreground">{donor?.phone}</div>
+                          <div className="font-medium text-text-primary font-bengali">{donor?.full_name}</div>
+                          <div className="text-sm text-muted-foreground">{donor?.mobile}</div>
+                          <div className="text-xs text-muted-foreground">{donor?.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="py-3 px-4">
                       <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                        {donor?.bloodGroup}
+                        {donor?.blood_group}
                       </span>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="text-sm text-text-primary font-bengali">{donor?.location}</span>
+                      <div className="text-sm text-text-primary font-bengali">
+                        <div>{donor?.upazila}, {donor?.district}</div>
+                        <div className="text-xs text-muted-foreground">{donor?.address}</div>
+                      </div>
                     </td>
                     <td className="py-3 px-4">
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border bg-success/10 text-success border-success/20">
-                        {donor?.status === 'verified' ? 'যাচাইকৃত' : 'অপেক্ষমান'}
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${
+                        donor?.is_verified 
+                          ? 'bg-success/10 text-success border-success/20' 
+                          : 'bg-warning/10 text-warning border-warning/20'
+                      }`}>
+                        {donor?.is_verified ? 'যাচাইকৃত' : 'অপেক্ষমান'}
                       </span>
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center space-x-2">
-                        <button className="p-1 text-muted-foreground hover:text-primary">
+                        <button 
+                          className="p-1 text-muted-foreground hover:text-primary"
+                          title="বিস্তারিত দেখুন"
+                        >
                           <Icon name="Eye" size={16} />
                         </button>
-                        <button className="p-1 text-muted-foreground hover:text-primary">
+                        <button 
+                          className="p-1 text-muted-foreground hover:text-primary"
+                          title="সম্পাদনা করুন"
+                        >
                           <Icon name="Edit" size={16} />
+                        </button>
+                        {!donor?.is_verified && (
+                          <button 
+                            className="p-1 text-muted-foreground hover:text-success"
+                            title="যাচাই করুন"
+                            onClick={() => handleVerifyDonor(donor?.id)}
+                          >
+                            <Icon name="CheckCircle" size={16} />
+                          </button>
+                        )}
+                        <button 
+                          className="p-1 text-muted-foreground hover:text-secondary"
+                          title="দান যোগ করুন"
+                          onClick={() => handleAddDonation(donor)}
+                        >
+                          <Icon name="Plus" size={16} />
                         </button>
                       </div>
                     </td>
@@ -181,6 +237,17 @@ const DonorManagement = () => {
           </div>
         </>
       )}
+      
+      {/* Donation Modal */}
+      <DonationModal
+        isOpen={showDonationModal}
+        onClose={() => {
+          setShowDonationModal(false);
+          setSelectedDonor(null);
+        }}
+        donor={selectedDonor}
+        onSubmit={handleDonationSubmit}
+      />
     </div>
   );
 };

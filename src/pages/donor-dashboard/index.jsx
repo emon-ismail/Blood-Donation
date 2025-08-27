@@ -10,32 +10,15 @@ import ReferralSystem from './components/ReferralSystem';
 import Icon from '../../components/AppIcon';
 import { useAuth } from '../../contexts/AuthContext';
 import { donorService } from '../../lib/donorService';
+import DonationModal from '../../components/DonationModal';
 
 const DonorDashboard = () => {
-  const { user } = useAuth();
+  const { user, donorData, updateDonorData } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
-  const [donorData, setDonorData] = useState(null);
+  const [localDonorData, setLocalDonorData] = useState(donorData);
   const [loading, setLoading] = useState(true);
-
-  // Mock donor data
-  const mockDonorData = {
-    id: "DN001",
-    name: "মোহাম্মদ রহিম উদ্দিন",
-    bloodGroup: "B+",
-    phone: "+880 1712-345678",
-    email: "rahim.uddin@email.com",
-    location: "ঢাকা, বাংলাদেশ",
-    district: "ঢাকা",
-    joinDate: "2023-01-15",
-    verified: true,
-    livesSaved: 12,
-    totalDonations: 8,
-    communityRank: 23,
-    nextDonationDays: 45,
-    lastDonationDate: "2024-06-15",
-    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face"
-  };
+  const [showDonationModal, setShowDonationModal] = useState(false);
 
   const mockAchievements = [
     {
@@ -159,9 +142,11 @@ const DonorDashboard = () => {
   ];
 
   const mockEligibilityData = {
-    daysUntilEligible: 45,
-    nextEligibleDate: "2024-10-15",
-    lastHealthCheck: "২৫ জুলাই, ২০২ৄ",
+    daysUntilEligible: donorData?.nextDonationDays || 90,
+    nextEligibleDate: donorData?.nextDonationDays ? 
+      new Date(Date.now() + donorData.nextDonationDays * 24 * 60 * 60 * 1000).toLocaleDateString('bn-BD') : 
+      "২০২৪-১০-১৫",
+    lastHealthCheck: "২৫ জুলাই, ২০২৪",
     hemoglobin: 14.2,
     weight: 68,
     bloodPressure: "120/80",
@@ -221,15 +206,22 @@ const DonorDashboard = () => {
 
   useEffect(() => {
     if (!user?.email) {
+      setLoading(false);
       navigate('/donor-login');
       return;
     }
 
     const loadDonorData = async () => {
       try {
+        if (donorData && donorData.email === user.email) {
+          setLocalDonorData(donorData);
+          setLoading(false);
+          return;
+        }
+        
         const donor = await donorService.getDonorByEmail(user.email);
         if (donor) {
-          setDonorData({
+          const formattedData = {
             id: donor.id,
             name: donor.full_name,
             bloodGroup: donor.blood_group,
@@ -239,13 +231,17 @@ const DonorDashboard = () => {
             district: donor.district,
             joinDate: donor.created_at,
             verified: donor.is_verified,
-            livesSaved: 0,
-            totalDonations: 0,
-            communityRank: 0,
-            nextDonationDays: 90,
-            lastDonationDate: null,
+            livesSaved: donor.livesSaved || 0,
+            totalDonations: donor.totalDonations || 0,
+            communityRank: donor.communityRank || 0,
+            nextDonationDays: donor.nextDonationDays || 90,
+            lastDonationDate: donor.lastDonationDate,
+            latitude: donor.latitude,
+            longitude: donor.longitude,
             profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`
-          });
+          };
+          setLocalDonorData(formattedData);
+          updateDonorData(formattedData);
         } else {
           navigate('/donor-login');
         }
@@ -258,10 +254,9 @@ const DonorDashboard = () => {
     };
 
     loadDonorData();
-  }, [user, navigate]);
+  }, [user, navigate, donorData, updateDonorData]);
 
   const handleUpdatePreferences = async (newPreferences) => {
-    // Simulate API call
     return new Promise((resolve) => {
       setTimeout(() => {
         console.log('Preferences updated:', newPreferences);
@@ -305,29 +300,40 @@ const DonorDashboard = () => {
       <div className="pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Welcome Section */}
-          <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-6 mb-8 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                  <Icon name="User" size={32} color="white" />
+          <div className="bg-gradient-to-r from-primary to-secondary rounded-xl p-4 sm:p-6 mb-6 sm:mb-8 text-white">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center">
+                  <Icon name="User" size={24} className="sm:w-8 sm:h-8" color="white" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bengali font-bold mb-1">
-                    স্বাগতম, {donorData?.name || 'দাতা'}
+                  <h1 className="text-lg sm:text-2xl font-bengali font-bold mb-1">
+                    স্বাগতম, {localDonorData?.name || 'দাতা'}
                   </h1>
-                  <p className="text-white/80 font-bengali">
-                    {donorData?.bloodGroup} গ্রুপ • {donorData?.district} • যোগদান: {donorData?.joinDate ? new Date(donorData.joinDate)?.getFullYear() : '২০২৪'}
+                  <p className="text-sm sm:text-base text-white/80 font-bengali">
+                    {localDonorData?.bloodGroup} গ্রুপ • {localDonorData?.district} • যোগদান: {localDonorData?.joinDate ? new Date(localDonorData.joinDate)?.getFullYear() : '২০২৪'}
                   </p>
                 </div>
               </div>
-              <div className="hidden md:flex items-center space-x-4">
+              <div className="flex sm:hidden items-center justify-around bg-white/10 rounded-lg p-3">
                 <div className="text-center">
-                  <p className="text-3xl font-bold">{donorData?.livesSaved || 0}</p>
+                  <p className="text-xl font-bold">{localDonorData?.livesSaved || 0}</p>
+                  <p className="text-xs font-bengali text-white/80">জীবন বাঁচানো</p>
+                </div>
+                <div className="w-px h-8 bg-white/20"></div>
+                <div className="text-center">
+                  <p className="text-xl font-bold">{localDonorData?.totalDonations || 0}</p>
+                  <p className="text-xs font-bengali text-white/80">রক্তদান</p>
+                </div>
+              </div>
+              <div className="hidden sm:flex items-center space-x-4">
+                <div className="text-center">
+                  <p className="text-3xl font-bold">{localDonorData?.livesSaved || 0}</p>
                   <p className="text-sm font-bengali text-white/80">জীবন বাঁচানো</p>
                 </div>
                 <div className="w-px h-12 bg-white/20"></div>
                 <div className="text-center">
-                  <p className="text-3xl font-bold">{donorData?.totalDonations || 0}</p>
+                  <p className="text-3xl font-bold">{localDonorData?.totalDonations || 0}</p>
                   <p className="text-sm font-bengali text-white/80">রক্তদান</p>
                 </div>
               </div>
@@ -335,19 +341,19 @@ const DonorDashboard = () => {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="bg-white rounded-xl shadow-brand mb-8">
+          <div className="bg-white rounded-xl shadow-brand mb-6 sm:mb-8">
             <div className="border-b border-border">
-              <nav className="flex space-x-8 px-6" aria-label="Tabs">
+              <nav className="flex overflow-x-auto px-4 sm:px-6" aria-label="Tabs">
                 {tabs?.map((tab) => (
                   <button
                     key={tab?.id}
                     onClick={() => setActiveTab(tab?.id)}
-                    className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                    className={`flex items-center space-x-1 sm:space-x-2 py-3 sm:py-4 px-2 sm:px-1 mr-4 sm:mr-8 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap transition-colors duration-200 ${
                       activeTab === tab?.id
                         ? 'border-primary text-primary' :'border-transparent text-text-secondary hover:text-text-primary hover:border-border'
                     }`}
                   >
-                    <Icon name={tab?.icon} size={16} />
+                    <Icon name={tab?.icon} size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-bengali">{tab?.name}</span>
                   </button>
                 ))}
@@ -355,13 +361,87 @@ const DonorDashboard = () => {
             </div>
           </div>
 
+          {/* Location Update Prompt for donors without GPS */}
+          {localDonorData && (!localDonorData.latitude || !localDonorData.longitude) && (
+            <div className="bg-warning/10 border border-warning/20 rounded-xl p-6 mb-6">
+              <div className="flex items-start space-x-4">
+                <Icon name="MapPin" size={24} color="var(--color-warning)" />
+                <div className="flex-1">
+                  <h3 className="font-bengali font-semibold text-warning mb-2">
+                    📍 আপনার অবস্থান আপডেট করুন
+                  </h3>
+                  <p className="text-sm text-warning/80 font-bengali mb-4">
+                    আপনার GPS অবস্থান সংরক্ষিত নেই। এটি যোগ করলে রক্তের প্রয়োজনে আপনাকে দ্রুত খুঁজে পাওয়া যাবে।
+                  </p>
+                  <button
+                    onClick={async () => {
+                      if (navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition(
+                          async (position) => {
+                            try {
+                              await donorService.updateDonorLocation(localDonorData.id, {
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                              });
+                              
+                              setLocalDonorData(prev => ({
+                                ...prev,
+                                latitude: position.coords.latitude,
+                                longitude: position.coords.longitude
+                              }));
+                              
+                              alert('✅ আপনার অবস্থান সফলভাবে আপডেট হয়েছে!');
+                            } catch (error) {
+                              console.error('Location update failed:', error);
+                              alert('অবস্থান আপডেট করতে সমস্যা হয়েছে।');
+                            }
+                          },
+                          (error) => {
+                            alert('অবস্থান অ্যাক্সেস করতে পারছি না। অনুগ্রহ করে browser এ location permission দিন।');
+                          }
+                        );
+                      }
+                    }}
+                    className="px-4 py-2 bg-warning text-white rounded-lg hover:bg-warning/90 font-bengali text-sm"
+                  >
+                    📍 এখনই অবস্থান যোগ করুন
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tab Content */}
           <div className="space-y-6">
             {activeTab === 'overview' && (
               <>
-                <ImpactSummary donorData={donorData} />
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <EligibilityTracker eligibilityData={mockEligibilityData} />
+                <ImpactSummary donorData={localDonorData} />
+                
+                {/* Add Donation Card */}
+                <div className="bg-gradient-to-r from-secondary to-accent rounded-xl p-4 sm:p-6 text-white mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bengali font-semibold mb-2">
+                        🏅 নতুন দান যোগ করুন
+                      </h3>
+                      <p className="text-white/80 font-bengali text-sm">
+                        আপনি কি সম্প্রতি রক্তদান করেছেন? এখানে রেকর্ড করুন।
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setShowDonationModal(true)}
+                      className="px-4 sm:px-6 py-2 sm:py-3 bg-white/20 hover:bg-white/30 rounded-lg font-bengali font-semibold transition-all duration-300 text-sm sm:text-base w-full sm:w-auto"
+                    >
+                      🩸 দান যোগ করুন
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                  <EligibilityTracker eligibilityData={{
+                    ...mockEligibilityData,
+                    daysUntilEligible: localDonorData?.nextDonationDays || 90
+                  }} />
                   <div className="space-y-6">
                     <AchievementBadges achievements={mockAchievements?.slice(0, 4)} />
                   </div>
@@ -394,21 +474,50 @@ const DonorDashboard = () => {
           </div>
 
           {/* Quick Actions Floating Button */}
-          <div className="fixed bottom-6 right-6 z-40">
-            <div className="flex flex-col space-y-3">
-              <button className="w-14 h-14 bg-primary text-white rounded-full shadow-brand-lg hover:shadow-brand-xl transition-all duration-300 flex items-center justify-center group">
-                <Icon name="Heart" size={24} className="group-hover:scale-110 transition-transform heartbeat" />
+          <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-40">
+            <div className="flex flex-col space-y-2 sm:space-y-3">
+              <button className="w-12 h-12 sm:w-14 sm:h-14 bg-primary text-white rounded-full shadow-brand-lg hover:shadow-brand-xl transition-all duration-300 flex items-center justify-center group">
+                <Icon name="Heart" size={20} className="sm:w-6 sm:h-6 group-hover:scale-110 transition-transform heartbeat" />
               </button>
-              <button className="w-12 h-12 bg-secondary text-white rounded-full shadow-brand hover:shadow-brand-lg transition-all duration-300 flex items-center justify-center">
-                <Icon name="MessageCircle" size={20} />
+              <button className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary text-white rounded-full shadow-brand hover:shadow-brand-lg transition-all duration-300 flex items-center justify-center">
+                <Icon name="MessageCircle" size={16} className="sm:w-5 sm:h-5" />
               </button>
-              <button className="w-12 h-12 bg-trust text-white rounded-full shadow-brand hover:shadow-brand-lg transition-all duration-300 flex items-center justify-center">
-                <Icon name="Phone" size={20} />
+              <button className="w-10 h-10 sm:w-12 sm:h-12 bg-trust text-white rounded-full shadow-brand hover:shadow-brand-lg transition-all duration-300 flex items-center justify-center">
+                <Icon name="Phone" size={16} className="sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Donation Modal */}
+      <DonationModal
+        isOpen={showDonationModal}
+        onClose={() => setShowDonationModal(false)}
+        donor={localDonorData}
+        onSubmit={async (donationData) => {
+          try {
+            await donorService.addDonation(donorData.id, donationData);
+            const updatedDonor = await donorService.getDonorByEmail(user.email);
+            if (updatedDonor) {
+              const newData = {
+                ...localDonorData,
+                livesSaved: updatedDonor.livesSaved || 0,
+                totalDonations: updatedDonor.totalDonations || 0,
+                communityRank: updatedDonor.communityRank || 0,
+                nextDonationDays: updatedDonor.nextDonationDays || 90,
+                lastDonationDate: updatedDonor.lastDonationDate
+              };
+              setLocalDonorData(newData);
+              updateDonorData(newData);
+            }
+            setShowDonationModal(false);
+          } catch (error) {
+            console.error('Donation submission failed:', error);
+            alert('দান রেকর্ড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');
+          }
+        }}
+      />
     </div>
   );
 };

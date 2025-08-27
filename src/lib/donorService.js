@@ -141,7 +141,7 @@ export const donorService = {
     return data
   },
 
-  // Get donor by email
+  // Get donor by email with impact data
   async getDonorByEmail(email) {
     const { data, error } = await supabase
       .from('donors')
@@ -150,6 +150,13 @@ export const donorService = {
       .maybeSingle()
 
     if (error) throw error
+    
+    if (data) {
+      // Get impact metrics
+      const impact = await this.getDonorImpact(data.id)
+      return { ...data, ...impact }
+    }
+    
     return data
   },
 
@@ -212,6 +219,77 @@ export const donorService = {
     return data[0]
   },
 
+  // Update donor location
+  async updateDonorLocation(donorId, locationData) {
+    const { data, error } = await supabase
+      .from('donors')
+      .update({
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', donorId)
+      .select()
+
+    if (error) throw error
+    return data[0]
+  },
+
+  // Add donation record
+  async addDonation(donorId, donationData) {
+    try {
+      // Add to donations table
+      const { error: donationError } = await supabase
+        .from('donations')
+        .insert({
+          donor_id: donorId,
+          donation_date: donationData.date,
+          hospital_name: donationData.hospital,
+          amount_ml: donationData.amount || 450,
+          created_at: new Date().toISOString()
+        })
+
+      if (donationError) throw donationError
+
+      // Get current donation count from donations table
+      const { data: donationCount } = await supabase
+        .from('donations')
+        .select('id')
+        .eq('donor_id', donorId)
+
+      const totalDonations = donationCount?.length || 0
+
+      // Update donor's total donations count
+      const { data, error } = await supabase
+        .from('donors')
+        .update({
+          total_donations: totalDonations,
+          last_donation_date: donationData.date,
+          last_active: new Date().toISOString()
+        })
+        .eq('id', donorId)
+        .select()
+
+      if (error) throw error
+      return data[0]
+    } catch (error) {
+      console.error('Error adding donation:', error)
+      throw error
+    }
+  },
+
+  // Update donor rating
+  async updateDonorRating(donorId, rating) {
+    const { data, error } = await supabase
+      .from('donors')
+      .update({ rating: rating })
+      .eq('id', donorId)
+      .select()
+
+    if (error) throw error
+    return data[0]
+  },
+
   // Get donor statistics
   async getDonorStats() {
     const { data, error } = await supabase
@@ -234,6 +312,139 @@ export const donorService = {
       available,
       todayRegistrations,
       pending: total - verified
+    }
+  },
+
+  // Add rating for donor
+  async addRating(ratingData) {
+    try {
+      // Add to ratings table
+      const { error: ratingError } = await supabase
+        .from('ratings')
+        .insert({
+          donor_id: ratingData.donorId,
+          reviewer_id: ratingData.reviewerId,
+          reviewer_name: ratingData.reviewerName,
+          rating: ratingData.rating,
+          comment: ratingData.comment,
+          created_at: new Date().toISOString()
+        })
+
+      if (ratingError) throw ratingError
+
+      // Calculate new average rating
+      const { data: ratings } = await supabase
+        .from('ratings')
+        .select('rating')
+        .eq('donor_id', ratingData.donorId)
+
+      const avgRating = ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length
+
+      // Update donor's rating
+      const { error: updateError } = await supabase
+        .from('donors')
+        .update({ rating: avgRating.toFixed(1) })
+        .eq('id', ratingData.donorId)
+
+      if (updateError) throw updateError
+
+      return { success: true, newRating: avgRating.toFixed(1) }
+    } catch (error) {
+      console.error('Error adding rating:', error)
+      throw error
+    }
+  },
+
+  // Get ratings for donor
+  async getDonorRatings(donorId) {
+    const { data, error } = await supabase
+      .from('ratings')
+      .select('*')
+      .eq('donor_id', donorId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+    return data || []
+  },
+
+  // Check if user already rated donor
+  async hasUserRated(donorId, userId) {
+    const { data, error } = await supabase
+      .from('ratings')
+      .select('id')
+      .eq('donor_id', donorId)
+      .eq('reviewer_id', userId)
+      .maybeSingle()
+
+    if (error) throw error
+    return !!data
+  },
+
+  // Get donor impact metrics
+  async getDonorImpact(donorId) {
+    try {
+      // Get donor data
+      const { data: donor, error: donorError } = await supabase
+        .from('donors')
+        .select('*')
+        .eq('id', donorId)
+        .single()
+
+      if (donorError) throw donorError
+
+      // Get donation count from donations table
+      const { data: donations, error: donationsError } = await supabase
+        .from('donations')
+        .select('*')
+        .eq('donor_id', donorId)
+        .order('donation_date', { ascending: false })
+
+      if (donationsError) throw donationsError
+
+      const totalDonations = donations?.length || donor.total_donations || 0
+      const livesSaved = totalDonations * 3 // Each donation can save up to 3 lives
+      
+      // Calculate next donation eligibility
+      const lastDonationDate = donations?.[0]?.donation_date || donor.last_donation_date
+      let nextDonationDays = 0
+      
+      if (lastDonationDate) {
+        const lastDate = new Date(lastDonationDate)
+        const today = new Date()
+        const daysSinceLastDonation = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24))
+        nextDonationDays = Math.max(0, 90 - daysSinceLastDonation)
+      }
+
+      // Get community ranking in district
+      const { data: districtDonors, error: rankError } = await supabase
+        .from('donors')
+        .select('id, total_donations')
+        .eq('district', donor.district)
+        .eq('is_verified', true)
+        .order('total_donations', { ascending: false })
+
+      if (rankError) throw rankError
+
+      const communityRank = districtDonors.findIndex(d => d.id === donorId) + 1
+
+      return {
+        livesSaved,
+        totalDonations,
+        communityRank: communityRank || 0,
+        nextDonationDays,
+        lastDonationDate,
+        donations: donations || []
+      }
+    } catch (error) {
+      console.error('Error getting donor impact:', error)
+      return {
+        livesSaved: 0,
+        totalDonations: 0,
+        communityRank: 0,
+        nextDonationDays: 90,
+        lastDonationDate: null,
+        donations: []
+      }
     }
   }
 }
