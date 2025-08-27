@@ -86,16 +86,16 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
   return (
     <div className={`rounded-lg border-2 p-4 sm:p-6 transition-all duration-300 hover:shadow-brand ${urgencyConfig?.color} w-full max-w-full overflow-hidden break-words`}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-4 gap-2">
-        <div className="flex items-center space-x-3">
-          <div className={`px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${urgencyConfig?.badge}`}>
-            <Icon name={urgencyConfig?.icon} size={12} />
-            <span className="font-bengali">{urgencyConfig?.label}</span>
+      <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <div className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium flex items-center space-x-1 ${urgencyConfig?.badge}`}>
+            <Icon name={urgencyConfig?.icon} size={10} className="sm:w-3 sm:h-3" />
+            <span className="font-bengali text-xs">{urgencyConfig?.label}</span>
           </div>
           {request?.verified && (
             <div className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium flex items-center space-x-1">
-              <Icon name="ShieldCheck" size={12} />
-              <span className="font-bengali">যাচাইকৃত</span>
+              <Icon name="ShieldCheck" size={10} className="sm:w-3 sm:h-3" />
+              <span className="font-bengali text-xs">যাচাইকৃত</span>
             </div>
           )}
         </div>
@@ -111,14 +111,14 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
       </div>
       {/* Patient Info */}
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-2 gap-2">
-          <h3 className="text-lg font-bengali font-bold text-text-primary truncate flex-1 min-w-0">{request?.patientName}</h3>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-2 gap-2">
+          <h3 className="text-base sm:text-lg font-bengali font-bold text-text-primary break-words">{request?.patientName}</h3>
           <div className="flex items-center space-x-2 flex-shrink-0">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm sm:text-lg">{request?.bloodGroup}</span>
+            <div className="w-8 h-8 sm:w-12 sm:h-12 bg-primary rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-xs sm:text-lg">{request?.bloodGroup}</span>
             </div>
             <div className="text-right">
-              <div className="text-sm font-medium text-text-primary">{request?.unitsNeeded} ব্যাগ</div>
+              <div className="text-xs sm:text-sm font-medium text-text-primary">{request?.unitsNeeded} ব্যাগ</div>
               <div className="text-xs text-muted-foreground font-bengali">প্রয়োজন</div>
             </div>
           </div>
@@ -203,16 +203,16 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
         </div>
       </div>
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
         <Button
           variant={pledged ? "success" : "default"}
           size="sm"
           iconName={pledged ? "Check" : "Heart"}
           iconPosition="left"
           onClick={handlePledge}
-          className="flex-1"
+          className="w-full"
         >
-          <span className="font-bengali">
+          <span className="font-bengali text-xs sm:text-sm">
             {pledged ? 'সাহায্য করবেন ✓' : 'সাহায্য করবেন'}
           </span>
         </Button>
@@ -222,9 +222,9 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
           size="sm"
           iconName="MessageCircle"
           iconPosition="left"
-          className="flex-1"
+          className="w-full"
         >
-          <span className="font-bengali">দোয়া করুন</span>
+          <span className="font-bengali text-xs sm:text-sm">দোয়া করুন</span>
         </Button>
         
         <Button
@@ -233,9 +233,9 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
           iconName="Share2"
           iconPosition="left"
           onClick={() => onShare(request)}
-          className="sm:w-auto"
+          className="w-full"
         >
-          <span className="font-bengali">শেয়ার</span>
+          <span className="font-bengali text-xs sm:text-sm">শেয়ার</span>
         </Button>
       </div>
       {/* Prayer Section */}

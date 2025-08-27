@@ -220,34 +220,34 @@ const AdminDashboard = () => {
         <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
           {/* Dashboard Header */}
           <div className="mb-8">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-              <div className="mb-4 lg:mb-0">
-                <h1 className="text-3xl font-bold text-text-primary font-bengali mb-2">
+            <div className="flex flex-col space-y-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-text-primary font-bengali mb-2">
                   {userRole === 'moderator' ? 'মডারেটর ড্যাশবোর্ড' : 
                    userRole === 'super_admin' ? 'সুপার অ্যাডমিন ড্যাশবোর্ড' : 
                    'অ্যাডমিন ড্যাশবোর্ড'}
                 </h1>
-                <p className="text-muted-foreground font-bengali">
+                <p className="text-sm text-muted-foreground font-bengali">
                   {userRole === 'moderator' ? 'রক্তের অনুরোধ যাচাই ও অনুমোদন' : 
                    'LifeLink Bangladesh প্ল্যাটফর্ম ব্যবস্থাপনা কেন্দ্র'}
                 </p>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <Icon name="Clock" size={16} />
+              <div className="flex flex-col space-y-3">
+                <div className="flex items-center space-x-2 text-xs sm:text-sm text-muted-foreground">
+                  <Icon name="Clock" size={14} />
                   <span className="font-bengali">
                     {currentTime?.toLocaleDateString('bn-BD')} - {currentTime?.toLocaleTimeString('bn-BD')}
                   </span>
                 </div>
                 
-                <div className="flex items-center space-x-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
                   {/* Admin Profile */}
-                  <div className="flex items-center space-x-3 bg-white rounded-lg px-4 py-2 shadow-sm border">
-                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                      <Icon name="User" size={16} color="white" />
+                  <div className="flex items-center space-x-3 bg-white rounded-lg px-3 py-2 shadow-sm border w-full sm:w-auto">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 bg-primary rounded-full flex items-center justify-center">
+                      <Icon name="User" size={12} color="white" className="sm:w-4 sm:h-4" />
                     </div>
-                    <div className="text-sm">
+                    <div className="text-xs sm:text-sm">
                       <div className="font-medium text-text-primary">
                         {adminData.full_name || adminData.username || 'Admin'}
                       </div>
@@ -258,12 +258,14 @@ const AdminDashboard = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Button variant="outline" size="sm" iconName="Download">
-                      <span className="font-bengali">রিপোর্ট এক্সপোর্ট</span>
+                  <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                    <Button variant="outline" size="sm" iconName="Download" className="flex-1 sm:flex-none">
+                      <span className="font-bengali hidden sm:inline">রিপোর্ট</span>
+                      <span className="font-bengali sm:hidden">রিপোর্ট</span>
                     </Button>
-                    <Button variant="default" size="sm" iconName="Settings">
-                      <span className="font-bengali">সেটিংস</span>
+                    <Button variant="default" size="sm" iconName="Settings" className="flex-1 sm:flex-none">
+                      <span className="font-bengali hidden sm:inline">সেটিংস</span>
+                      <span className="font-bengali sm:hidden">সেটিংস</span>
                     </Button>
                     <Button 
                       variant="outline" 
@@ -274,6 +276,7 @@ const AdminDashboard = () => {
                         localStorage.removeItem('adminData');
                         setIsLoggedIn(false);
                       }}
+                      className="flex-1 sm:flex-none"
                     >
                       <span className="font-bengali">লগআউট</span>
                     </Button>
@@ -285,19 +288,22 @@ const AdminDashboard = () => {
 
           {/* Navigation Tabs */}
           <div className="mb-8">
-            <div className="flex space-x-1 bg-muted rounded-lg p-1 overflow-x-auto">
+            <div className="flex space-x-1 bg-muted rounded-lg p-1 overflow-x-auto scrollbar-hide">
               {viewOptions?.map((option) => (
                 <button
                   key={option?.id}
                   onClick={() => setSelectedView(option?.id)}
-                  className={`flex items-center space-x-2 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
+                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
                     selectedView === option?.id
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-muted-foreground hover:text-text-primary'
                   }`}
                 >
-                  <Icon name={option?.icon} size={16} />
-                  <span className="font-bengali">{option?.label}</span>
+                  <Icon name={option?.icon} size={14} className="sm:w-4 sm:h-4" />
+                  <span className="font-bengali hidden sm:inline">{option?.label}</span>
+                  <span className="font-bengali sm:hidden text-xs">
+                    {option?.label.split(' ')[0]}
+                  </span>
                 </button>
               ))}
             </div>

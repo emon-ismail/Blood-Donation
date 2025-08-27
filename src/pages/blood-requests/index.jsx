@@ -257,13 +257,13 @@ const BloodRequestsPage = () => {
         <section className="bg-gradient-to-r from-primary to-secondary text-white py-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center">
-              <div className="flex items-center justify-center space-x-3 mb-4">
-                <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-                  <Icon name="Heart" size={32} color="white" className="heartbeat" />
+              <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-white/20 rounded-full flex items-center justify-center">
+                  <Icon name="Heart" size={24} color="white" className="heartbeat sm:w-8 sm:h-8" />
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bengali font-bold">রক্তের অনুরোধ</h1>
+                <h1 className="text-2xl sm:text-4xl md:text-5xl font-bengali font-bold text-center">রক্তের অনুরোধ</h1>
               </div>
-              <p className="text-xl font-bengali mb-8 opacity-90">
+              <p className="text-base sm:text-xl font-bengali mb-6 sm:mb-8 opacity-90 px-4">
                 সম্প্রদায়ের শক্তিতে জীবন বাঁচান - প্রতিটি অনুরোধ একটি আশার আলো
               </p>
               
@@ -366,9 +366,9 @@ const BloodRequestsPage = () => {
               {/* Main Content */}
               <div className="flex-1">
                 {/* Results Header */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
                   <div>
-                    <h2 className="text-2xl font-bengali font-bold text-text-primary">
+                    <h2 className="text-xl sm:text-2xl font-bengali font-bold text-text-primary">
                       রক্তের অনুরোধসমূহ
                     </h2>
                     <p className="text-sm text-muted-foreground font-bengali">
@@ -381,6 +381,7 @@ const BloodRequestsPage = () => {
                     iconName="Plus"
                     iconPosition="left"
                     onClick={() => setShowRequestForm(true)}
+                    className="w-full sm:w-auto"
                   >
                     <span className="font-bengali">নতুন অনুরোধ</span>
                   </Button>
@@ -519,11 +520,11 @@ const BloodRequestsPage = () => {
         {/* Call to Action */}
         <section className="bg-gradient-to-r from-green-600 to-green-700 text-white py-12">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <Icon name="Users" size={32} />
-              <h2 className="text-3xl font-bengali font-bold">আপনিও হতে পারেন একজন জীবনদাতা</h2>
+            <div className="flex flex-col sm:flex-row items-center justify-center space-y-3 sm:space-y-0 sm:space-x-3 mb-4">
+              <Icon name="Users" size={24} className="sm:w-8 sm:h-8" />
+              <h2 className="text-xl sm:text-3xl font-bengali font-bold text-center">আপনিও হতে পারেন একজন জীবনদাতা</h2>
             </div>
-            <p className="text-lg font-bengali mb-8 opacity-90">
+            <p className="text-base sm:text-lg font-bengali mb-6 sm:mb-8 opacity-90 px-4">
               রক্তদান করুন, জীবন বাঁচান। আজই নিবন্ধন করুন এবং কমিউনিটির অংশ হয়ে উঠুন।
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
