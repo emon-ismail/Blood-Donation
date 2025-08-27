@@ -153,17 +153,17 @@ const AdminDashboard = () => {
           <div className="space-y-6">
             {/* Stats Grid */}
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {[...Array(6)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-lg p-6 shadow-brand animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-8 bg-gray-200 rounded mb-2"></div>
-                    <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                  <div key={i} className="bg-white rounded-lg p-4 sm:p-6 shadow-brand animate-pulse">
+                    <div className="h-3 sm:h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-6 sm:h-8 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-2 sm:h-3 bg-gray-200 rounded w-1/2"></div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 {statsData?.map((stat, index) => (
                   <StatsCard
                     key={index}
@@ -176,29 +176,29 @@ const AdminDashboard = () => {
                   />
                 ))}
               </div>
-            )}
+            )
             {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Button variant="default" iconName="UserPlus" onClick={() => setSelectedView('donors')}>
-                <span className="font-bengali">দাতা যোগ করুন</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <Button variant="default" iconName="UserPlus" onClick={() => setSelectedView('donors')} size="sm" className="text-xs sm:text-sm">
+                <span className="font-bengali">দাতা যোগ</span>
               </Button>
-              <Button variant="secondary" iconName="Heart" onClick={() => setSelectedView('requests')}>
-                <span className="font-bengali">অনুরোধ দেখুন</span>
+              <Button variant="secondary" iconName="Heart" onClick={() => setSelectedView('requests')} size="sm" className="text-xs sm:text-sm">
+                <span className="font-bengali">অনুরোধ</span>
               </Button>
-              <Button variant="outline" iconName="BarChart3" onClick={() => setSelectedView('analytics')}>
+              <Button variant="outline" iconName="BarChart3" onClick={() => setSelectedView('analytics')} size="sm" className="text-xs sm:text-sm">
                 <span className="font-bengali">রিপোর্ট</span>
               </Button>
-              <Button variant="outline" iconName="Settings">
+              <Button variant="outline" iconName="Settings" size="sm" className="text-xs sm:text-sm">
                 <span className="font-bengali">সেটিংস</span>
               </Button>
             </div>
             {/* Main Content Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <div className="space-y-4 sm:space-y-6">
                 <DistrictMap />
                 <RecentActivity />
               </div>
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <AnalyticsChart />
                 <SystemAlerts />
               </div>

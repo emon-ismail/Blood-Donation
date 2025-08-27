@@ -199,59 +199,58 @@ const RequestMonitoring = () => {
   ];
 
   return (
-    <div className="bg-card rounded-lg p-6 shadow-brand border border-border">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-text-primary font-bengali">রক্তের অনুরোধ মনিটরিং</h3>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" size="sm" iconName="Filter">
-            <span className="font-bengali">ফিল্টার</span>
+    <div className="bg-card rounded-lg p-4 sm:p-6 shadow-brand border border-border">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3">
+        <h3 className="text-base sm:text-lg font-semibold text-text-primary font-bengali">রক্তের অনুরোধ মনিটরিং</h3>
+        <div className="flex items-center space-x-2 sm:space-x-3 w-full sm:w-auto">
+          <Button variant="outline" size="sm" iconName="Filter" className="flex-1 sm:flex-none">
+            <span className="font-bengali text-xs sm:text-sm">ফিল্টার</span>
           </Button>
-          <Button variant="outline" size="sm" iconName="Download">
-            <span className="font-bengali">রিপোর্ট</span>
+          <Button variant="outline" size="sm" iconName="Download" className="flex-1 sm:flex-none">
+            <span className="font-bengali text-xs sm:text-sm">রিপোর্ট</span>
           </Button>
         </div>
       </div>
       {/* Tabs */}
-      <div className="flex space-x-1 mb-6 bg-muted rounded-lg p-1">
+      <div className="flex space-x-1 mb-4 sm:mb-6 bg-muted rounded-lg p-1 overflow-x-auto">
         {tabs?.map((tab) => (
           <button
             key={tab?.id}
             onClick={() => setSelectedTab(tab?.id)}
-            className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 font-bengali ${
+            className={`flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 font-bengali whitespace-nowrap ${
               selectedTab === tab?.id
                 ? 'bg-white text-primary shadow-sm'
                 : 'text-muted-foreground hover:text-text-primary'
             }`}
           >
-            {tab?.label} ({tab?.count})
+            <span className="hidden sm:inline">{tab?.label} ({tab?.count})</span>
+            <span className="sm:hidden">{tab?.label.split(' ')[0]} ({tab?.count})</span>
           </button>
         ))}
       </div>
       {/* Requests List */}
       <div className="space-y-4 max-h-96 overflow-y-auto">
         {filteredRequests?.map((request) => (
-          <div key={request?.id} className="border border-border rounded-lg p-4 hover:shadow-brand transition-all duration-200 w-full max-w-full overflow-hidden break-words">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-2">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getUrgencyColor(request?.urgency)}`}>
-                    {getUrgencyText(request?.urgency)}
-                  </span>
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                    {request?.bloodGroup}
-                  </span>
-                  <span className="text-sm font-medium text-text-primary">
-                    {request?.unitsNeeded} ব্যাগ
-                  </span>
-                </div>
+          <div key={request?.id} className="border border-border rounded-lg p-3 sm:p-4 hover:shadow-brand transition-all duration-200 w-full max-w-full overflow-hidden break-words">
+            <div className="flex flex-col sm:flex-row items-start justify-between mb-3 gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className={`inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${getUrgencyColor(request?.urgency)}`}>
+                  {getUrgencyText(request?.urgency)}
+                </span>
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                  {request?.bloodGroup}
+                </span>
+                <span className="text-xs sm:text-sm font-medium text-text-primary">
+                  {request?.unitsNeeded} ব্যাগ
+                </span>
                 {!request?.verified && (
                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-warning/10 text-warning border border-warning/20">
-                    <Icon name="AlertTriangle" size={12} className="mr-1" />
+                    <Icon name="AlertTriangle" size={10} className="mr-1" />
                     অযাচাইকৃত
                   </span>
                 )}
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-end">
                 <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(request?.status)}`}>
                   {getStatusText(request?.status)}
                 </span>
@@ -303,16 +302,17 @@ const RequestMonitoring = () => {
               {request?.description}
             </p>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 {!request?.verified && (
                   <Button 
                     variant="success" 
                     size="sm" 
                     iconName="CheckCircle"
                     onClick={() => handleVerifyRequest(request?.id)}
+                    className="flex-1 sm:flex-none"
                   >
-                    <span className="font-bengali">যাচাই করুন</span>
+                    <span className="font-bengali text-xs">যাচাই</span>
                   </Button>
                 )}
                 <Button 
@@ -320,27 +320,30 @@ const RequestMonitoring = () => {
                   size="sm" 
                   iconName="Eye"
                   onClick={() => handleViewDetails(request)}
+                  className="flex-1 sm:flex-none"
                 >
-                  <span className="font-bengali">বিস্তারিত</span>
+                  <span className="font-bengali text-xs">বিস্তারিত</span>
                 </Button>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   iconName="MessageSquare"
                   onClick={() => handleContact(request)}
+                  className="flex-1 sm:flex-none"
                 >
-                  <span className="font-bengali">যোগাযোগ</span>
+                  <span className="font-bengali text-xs">যোগাযোগ</span>
                 </Button>
               </div>
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {request?.status !== 'fulfilled' && (
                   <Button 
                     variant="success" 
                     size="sm" 
                     iconName="CheckCircle2"
                     onClick={() => handleMarkFulfilled(request?.id)}
+                    className="flex-1 sm:flex-none"
                   >
-                    <span className="font-bengali">সম্পন্ন</span>
+                    <span className="font-bengali text-xs">সম্পন্ন</span>
                   </Button>
                 )}
                 <Button 
@@ -348,16 +351,18 @@ const RequestMonitoring = () => {
                   size="sm" 
                   iconName="Flag"
                   onClick={() => handleReport(request?.id)}
+                  className="flex-1 sm:flex-none"
                 >
-                  <span className="font-bengali">রিপোর্ট</span>
+                  <span className="font-bengali text-xs">রিপোর্ট</span>
                 </Button>
                 <Button 
                   variant="destructive" 
                   size="sm" 
                   iconName="X"
                   onClick={() => handleCancelRequest(request?.id)}
+                  className="flex-1 sm:flex-none"
                 >
-                  <span className="font-bengali">বাতিল</span>
+                  <span className="font-bengali text-xs">বাতিল</span>
                 </Button>
               </div>
             </div>
