@@ -4,7 +4,7 @@ import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
-import { bloodRequestService, successStoryService } from '../../lib/bloodRequestService';
+import { supabase } from '../../lib/supabase';
 import RequestForm from './components/RequestForm';
 import RequestCard from './components/RequestCard';
 import FilterPanel from './components/FilterPanel';
@@ -40,16 +40,47 @@ const BloodRequestsPage = () => {
   const loadData = async (currentFilters = {}, page = 1, showLoading = true) => {
     try {
       if (showLoading) setLoading(true);
-      const [requestsResult, storiesData, statsData] = await Promise.all([
-        bloodRequestService.getActiveRequests(currentFilters, page, itemsPerPage),
-        successStoryService.getSuccessStories(3),
-        bloodRequestService.getRequestStats()
-      ]);
+      
+      let query = supabase
+        .from('blood_requests')
+        .select('*')
+        .in('status', ['active', 'verified']);
 
-      setRequests(requestsResult.data);
-      setTotalItems(requestsResult.count);
-      setSuccessStories(storiesData);
-      setStats(statsData);
+      // Apply blood group filters
+      if (currentFilters.bloodGroups?.length > 0) {
+        query = query.in('blood_group', currentFilters.bloodGroups);
+      }
+
+      // Apply urgency filters
+      if (currentFilters.urgencyLevels?.length > 0) {
+        query = query.in('urgency', currentFilters.urgencyLevels);
+      }
+
+      // Apply location filters
+      if (currentFilters.locations?.length > 0) {
+        query = query.in('district', currentFilters.locations);
+      }
+
+      // Apply units needed filter
+      if (currentFilters.unitsNeeded) {
+        query = query.gte('units_needed', parseInt(currentFilters.unitsNeeded));
+      }
+
+      const { data: requestsData } = await query.order('created_at', { ascending: false });
+
+      setRequests(requestsData || []);
+      setTotalItems(requestsData?.length || 0);
+      setSuccessStories([]);
+      
+      const urgent = requestsData?.filter(r => r.urgency === 'urgent' || r.urgency === 'emergency')?.length || 0;
+      setStats({ 
+        total: requestsData?.length || 0, 
+        active: requestsData?.length || 0, 
+        urgent, 
+        emergency: urgent,
+        todayRequests: 0, 
+        fulfilled: 0 
+      });
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -65,18 +96,20 @@ const BloodRequestsPage = () => {
   // Transform requests for display with safe defaults
   const displayRequests = (requests || []).map(request => ({
     id: request?.id || '',
+    requestId: request?.request_id || '',
     patientName: request?.patient_name || '',
     bloodGroup: request?.blood_group || '',
     unitsNeeded: request?.units_needed || 0,
-    hospital: request?.hospital || '',
-    location: request?.location || '',
+    hospital: request?.hospital_name || '',
+    hospitalAddress: request?.hospital_address || '',
+    location: `${request?.upazila || ''}, ${request?.district || ''}`,
     contactPerson: request?.contact_person || '',
-    contactPhone: request?.contact_phone || '',
-    urgencyLevel: request?.urgency_level || 'standard',
-    requiredBy: request?.required_by || new Date().toISOString(),
+    contactPhone: request?.contact_mobile || '',
+    urgencyLevel: request?.urgency || 'standard',
+    requiredBy: request?.needed_by_date || new Date().toISOString(),
     additionalInfo: request?.additional_info || '',
     postedAt: request?.created_at || new Date().toISOString(),
-    verified: request?.verified || false,
+    verified: false,
     pledges: 0,
     shares: 0,
     views: 0
@@ -135,12 +168,37 @@ const BloodRequestsPage = () => {
 
   const handleRequestSubmit = async (formData) => {
     try {
-      await bloodRequestService.createRequest(formData);
+      const requestId = `BR${Date.now().toString().slice(-6)}${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+      
+      console.log('Form data:', formData);
+      
+      const { error } = await supabase
+        .from('blood_requests')
+        .insert({
+          request_id: requestId,
+          patient_name: formData.patientName || '',
+          blood_group: formData.bloodGroup || '',
+          units_needed: parseInt(formData.unitsNeeded) || 1,
+          urgency: formData.urgencyLevel || 'standard',
+          hospital_name: formData.hospital || '',
+          hospital_address: formData.detailedAddress || '',
+          district: formData.location || '',
+          upazila: '',
+          contact_person: formData.contactPerson || '',
+          contact_mobile: formData.contactPhone || '',
+          needed_by_date: formData.requiredBy || new Date().toISOString(),
+          additional_info: formData.additionalInfo || '',
+          status: 'active'
+        });
+        
+      console.log('Insert error:', error);
+
+      if (error) throw error;
+
       setShowRequestForm(false);
-      // Reload data with current filters without showing loading
-      setCurrentPage(1); // Reset to first page
+      setCurrentPage(1);
       await loadData(filters, 1, false);
-      alert('অনুরোধ সফলভাবে জমা দেওয়া হয়েছে!');
+      alert(`অনুরোধ সফলভাবে জমা দেওয়া হয়েছে! আপনার অনুরোধ ID: ${requestId}`);
     } catch (error) {
       console.error('Failed to submit request:', error);
       alert('অনুরোধ জমা দিতে সমস্যা হয়েছে।');
@@ -297,7 +355,7 @@ const BloodRequestsPage = () => {
                     filters={filters}
                     onFilterChange={setFilters}
                     onClearFilters={clearFilters}
-                    availableLocations={[]}
+                    availableLocations={[...new Set(requests.map(r => r.district).filter(Boolean))]}
                   />
                 </div>
 

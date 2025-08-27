@@ -1,16 +1,16 @@
 import React from 'react';
 import Icon from '../../../components/AppIcon';
 
-const ImpactSummary = ({ donorData }) => {
+const ImpactSummary = ({ donorData, onRefresh }) => {
   const impactStats = [
     {
       id: 1,
-      title: "জীবন বাঁচানো হয়েছে",
+      title: "সেবায় অবদান",
       value: donorData?.livesSaved,
       icon: "Heart",
       color: "text-primary",
       bgColor: "bg-primary/10",
-      description: "আপনার রক্তদানে সম্ভাব্য জীবন রক্ষা"
+      description: "আপনার রক্তদানে মানবসেবার অবদান"
     },
     {
       id: 2,
@@ -52,15 +52,26 @@ const ImpactSummary = ({ donorData }) => {
             {donorData?.name} - {donorData?.bloodGroup} গ্রুপ
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
-            <Icon name="Award" size={24} color="white" />
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-bengali text-text-secondary">যাচাইকৃত দাতা</p>
-            <div className="flex items-center space-x-1">
-              <Icon name="CheckCircle" size={16} color="var(--color-success)" />
-              <span className="text-xs font-bengali text-success">সক্রিয়</span>
+        <div className="flex items-center space-x-3">
+          {onRefresh && (
+            <button
+              onClick={onRefresh}
+              className="p-2 text-text-secondary hover:text-primary hover:bg-primary/10 rounded-lg transition-colors duration-200"
+              title="তথ্য রিফ্রেশ করুন"
+            >
+              <Icon name="RefreshCw" size={20} />
+            </button>
+          )}
+          <div className="flex items-center space-x-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center">
+              <Icon name="Award" size={24} color="white" />
+            </div>
+            <div className="text-right">
+              <p className="text-sm font-bengali text-text-secondary">যাচাইকৃত দাতা</p>
+              <div className="flex items-center space-x-1">
+                <Icon name="CheckCircle" size={16} color="var(--color-success)" />
+                <span className="text-xs font-bengali text-success">সক্রিয়</span>
+              </div>
             </div>
           </div>
         </div>

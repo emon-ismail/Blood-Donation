@@ -139,11 +139,14 @@ const EligibilityTracker = ({ eligibilityData }) => {
             <span className="font-bengali text-sm text-text-secondary">পরবর্তী দানের তারিখ:</span>
           </div>
           <span className="font-bengali font-medium text-text-primary">
-            {new Date(eligibilityData.nextEligibleDate)?.toLocaleDateString('bn-BD', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
+            {eligibilityData?.daysUntilEligible <= 0 ? 
+              'এখনই দান করতে পারেন' : 
+              eligibilityData.nextEligibleDate?.toLocaleDateString('bn-BD', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })
+            }
           </span>
         </div>
       </div>

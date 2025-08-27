@@ -10,15 +10,17 @@ import ReferralSystem from './components/ReferralSystem';
 import Icon from '../../components/AppIcon';
 import { useAuth } from '../../contexts/AuthContext';
 import { donorService } from '../../lib/donorService';
+import { supabase } from '../../lib/supabase';
 import DonationModal from '../../components/DonationModal';
 
 const DonorDashboard = () => {
-  const { user, donorData, updateDonorData } = useAuth();
+  const { user, donorData, updateDonorData, logout } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [localDonorData, setLocalDonorData] = useState(donorData);
   const [loading, setLoading] = useState(true);
   const [showDonationModal, setShowDonationModal] = useState(false);
+  const [impactData, setImpactData] = useState(null);
 
   const mockAchievements = [
     {
@@ -141,17 +143,51 @@ const DonorDashboard = () => {
     }
   ];
 
-  const mockEligibilityData = {
-    daysUntilEligible: donorData?.nextDonationDays || 90,
-    nextEligibleDate: donorData?.nextDonationDays ? 
-      new Date(Date.now() + donorData.nextDonationDays * 24 * 60 * 60 * 1000).toLocaleDateString('bn-BD') : 
-      "২০২৪-১০-১৫",
-    lastHealthCheck: "২৫ জুলাই, ২০২৪",
-    hemoglobin: 14.2,
-    weight: 68,
-    bloodPressure: "120/80",
-    healthStatus: "excellent"
+  // Calculate eligibility data from real impact data
+  const getEligibilityData = () => {
+    const daysUntilEligible = localDonorData?.nextDonationDays || 90;
+    const nextEligibleDate = daysUntilEligible > 0 ? 
+      new Date(Date.now() + daysUntilEligible * 24 * 60 * 60 * 1000) : 
+      new Date();
+    
+    return {
+      daysUntilEligible,
+      nextEligibleDate,
+      lastHealthCheck: "২৫ জুলাই, ২০২৪",
+      hemoglobin: 14.2,
+      weight: 68,
+      bloodPressure: "120/80",
+      healthStatus: "excellent"
+    };
   };
+
+  // Function to refresh impact data
+  const refreshImpactData = async () => {
+    if (!localDonorData?.id) return;
+    
+    try {
+      const updatedImpact = await donorService.getDonorImpact(localDonorData.id);
+      setLocalDonorData(prev => ({
+        ...prev,
+        totalDonations: updatedImpact.totalDonations,
+        livesSaved: updatedImpact.livesSaved,
+        communityRank: updatedImpact.communityRank,
+        nextDonationDays: updatedImpact.nextDonationDays,
+        lastDonationDate: updatedImpact.lastDonationDate
+      }));
+      setImpactData(updatedImpact);
+    } catch (error) {
+      console.error('Failed to refresh impact data:', error);
+    }
+  };
+
+  // Auto-refresh impact data every 30 seconds
+  useEffect(() => {
+    if (!localDonorData?.id) return;
+    
+    const interval = setInterval(refreshImpactData, 30000);
+    return () => clearInterval(interval);
+  }, [localDonorData?.id]);
 
   const mockNotificationPreferences = {
     enabled: true,
@@ -219,32 +255,45 @@ const DonorDashboard = () => {
           return;
         }
         
-        const donor = await donorService.getDonorByEmail(user.email);
-        if (donor) {
-          const formattedData = {
-            id: donor.id,
-            name: donor.full_name,
-            bloodGroup: donor.blood_group,
-            phone: donor.mobile,
-            email: donor.email,
-            location: `${donor.upazila}, ${donor.district}`,
-            district: donor.district,
-            joinDate: donor.created_at,
-            verified: donor.is_verified,
-            livesSaved: donor.livesSaved || 0,
-            totalDonations: donor.totalDonations || 0,
-            communityRank: donor.communityRank || 0,
-            nextDonationDays: donor.nextDonationDays || 90,
-            lastDonationDate: donor.lastDonationDate,
-            latitude: donor.latitude,
-            longitude: donor.longitude,
-            profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`
-          };
-          setLocalDonorData(formattedData);
-          updateDonorData(formattedData);
-        } else {
+        // Use simple query without impact data to avoid loops
+        const { data: donor, error } = await supabase
+          .from('donors')
+          .select('*')
+          .eq('email', user.email)
+          .limit(1)
+          .single();
+          
+        if (error || !donor) {
           navigate('/donor-login');
+          return;
         }
+        
+        // Get impact data
+        const impact = await donorService.getDonorImpact(donor.id);
+        
+        const formattedData = {
+          id: donor.id,
+          donorId: donor.donor_id || `DN${donor.id.toString().slice(-6).padStart(6, '0')}`,
+          name: donor.full_name,
+          bloodGroup: donor.blood_group,
+          phone: donor.mobile,
+          email: donor.email,
+          location: `${donor.upazila}, ${donor.district}`,
+          district: donor.district,
+          joinDate: donor.created_at,
+          verified: donor.is_verified,
+          livesSaved: impact.livesSaved,
+          totalDonations: impact.totalDonations,
+          communityRank: impact.communityRank,
+          nextDonationDays: impact.nextDonationDays,
+          lastDonationDate: impact.lastDonationDate,
+          latitude: donor.latitude,
+          longitude: donor.longitude,
+          profileImage: `https://ui-avatars.com/api/?name=${encodeURIComponent(donor.full_name)}&background=C41E3A&color=fff`
+        };
+        setLocalDonorData(formattedData);
+        setImpactData(impact);
+        updateDonorData(formattedData);
       } catch (error) {
         console.error('Failed to load donor data:', error);
         navigate('/donor-login');
@@ -311,31 +360,51 @@ const DonorDashboard = () => {
                     স্বাগতম, {localDonorData?.name || 'দাতা'}
                   </h1>
                   <p className="text-sm sm:text-base text-white/80 font-bengali">
-                    {localDonorData?.bloodGroup} গ্রুপ • {localDonorData?.district} • যোগদান: {localDonorData?.joinDate ? new Date(localDonorData.joinDate)?.getFullYear() : '২০২৪'}
+                    {localDonorData?.bloodGroup} গ্রুপ • {localDonorData?.district} • ID: {localDonorData?.donorId || 'N/A'}
                   </p>
                 </div>
               </div>
-              <div className="flex sm:hidden items-center justify-around bg-white/10 rounded-lg p-3">
-                <div className="text-center">
-                  <p className="text-xl font-bold">{localDonorData?.livesSaved || 0}</p>
-                  <p className="text-xs font-bengali text-white/80">জীবন বাঁচানো</p>
+              <div className="flex sm:hidden items-center justify-between bg-white/10 rounded-lg p-3">
+                <div className="flex items-center space-x-4">
+                  <div className="text-center">
+                    <p className="text-xl font-bold">{localDonorData?.livesSaved || 0}</p>
+                    <p className="text-xs font-bengali text-white/80">সেবার অবদান</p>
+                  </div>
+                  <div className="w-px h-8 bg-white/20"></div>
+                  <div className="text-center">
+                    <p className="text-xl font-bold">{localDonorData?.totalDonations || 0}</p>
+                    <p className="text-xs font-bengali text-white/80">রক্তদান</p>
+                  </div>
                 </div>
-                <div className="w-px h-8 bg-white/20"></div>
-                <div className="text-center">
-                  <p className="text-xl font-bold">{localDonorData?.totalDonations || 0}</p>
-                  <p className="text-xs font-bengali text-white/80">রক্তদান</p>
-                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/donor-login');
+                  }}
+                  className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-xs font-bengali transition-colors"
+                >
+                  লগআউট
+                </button>
               </div>
               <div className="hidden sm:flex items-center space-x-4">
                 <div className="text-center">
                   <p className="text-3xl font-bold">{localDonorData?.livesSaved || 0}</p>
-                  <p className="text-sm font-bengali text-white/80">জীবন বাঁচানো</p>
+                  <p className="text-sm font-bengali text-white/80">সেবার অবদান</p>
                 </div>
                 <div className="w-px h-12 bg-white/20"></div>
                 <div className="text-center">
                   <p className="text-3xl font-bold">{localDonorData?.totalDonations || 0}</p>
                   <p className="text-sm font-bengali text-white/80">রক্তদান</p>
                 </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    navigate('/donor-login');
+                  }}
+                  className="ml-4 px-3 py-1 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bengali transition-colors"
+                >
+                  লগআউট
+                </button>
               </div>
             </div>
           </div>
@@ -415,7 +484,10 @@ const DonorDashboard = () => {
           <div className="space-y-6">
             {activeTab === 'overview' && (
               <>
-                <ImpactSummary donorData={localDonorData} />
+                <ImpactSummary 
+                  donorData={localDonorData} 
+                  onRefresh={refreshImpactData}
+                />
                 
                 {/* Add Donation Card */}
                 <div className="bg-gradient-to-r from-secondary to-accent rounded-xl p-4 sm:p-6 text-white mb-6">
@@ -438,10 +510,7 @@ const DonorDashboard = () => {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                  <EligibilityTracker eligibilityData={{
-                    ...mockEligibilityData,
-                    daysUntilEligible: localDonorData?.nextDonationDays || 90
-                  }} />
+                  <EligibilityTracker eligibilityData={getEligibilityData()} />
                   <div className="space-y-6">
                     <AchievementBadges achievements={mockAchievements?.slice(0, 4)} />
                   </div>
@@ -458,7 +527,7 @@ const DonorDashboard = () => {
             )}
 
             {activeTab === 'eligibility' && (
-              <EligibilityTracker eligibilityData={mockEligibilityData} />
+              <EligibilityTracker eligibilityData={getEligibilityData()} />
             )}
 
             {activeTab === 'notifications' && (
@@ -497,21 +566,22 @@ const DonorDashboard = () => {
         donor={localDonorData}
         onSubmit={async (donationData) => {
           try {
-            await donorService.addDonation(donorData.id, donationData);
-            const updatedDonor = await donorService.getDonorByEmail(user.email);
-            if (updatedDonor) {
-              const newData = {
-                ...localDonorData,
-                livesSaved: updatedDonor.livesSaved || 0,
-                totalDonations: updatedDonor.totalDonations || 0,
-                communityRank: updatedDonor.communityRank || 0,
-                nextDonationDays: updatedDonor.nextDonationDays || 90,
-                lastDonationDate: updatedDonor.lastDonationDate
-              };
-              setLocalDonorData(newData);
-              updateDonorData(newData);
-            }
+            await donorService.addDonation(localDonorData.id, donationData);
+            
+            // Refresh impact data after donation
+            const updatedImpact = await donorService.getDonorImpact(localDonorData.id);
+            
+            setLocalDonorData(prev => ({
+              ...prev,
+              totalDonations: updatedImpact.totalDonations,
+              livesSaved: updatedImpact.livesSaved,
+              communityRank: updatedImpact.communityRank,
+              nextDonationDays: updatedImpact.nextDonationDays,
+              lastDonationDate: updatedImpact.lastDonationDate
+            }));
+            setImpactData(updatedImpact);
             setShowDonationModal(false);
+            alert('ধন্যবাদ! দান সফলভাবে রেকর্ড হয়েছে।');
           } catch (error) {
             console.error('Donation submission failed:', error);
             alert('দান রেকর্ড করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।');

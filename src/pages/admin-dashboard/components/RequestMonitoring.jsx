@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
-import { bloodRequestService } from '../../../lib/bloodRequestService';
+import { supabase } from '../../../lib/supabase';
 
 const RequestMonitoring = () => {
   const [selectedTab, setSelectedTab] = useState('pending');
@@ -16,8 +16,12 @@ const RequestMonitoring = () => {
     try {
       setLoading(true);
       // Add timestamp to force fresh data
-      const requestData = await bloodRequestService.getActiveRequests({}, 1, 50);
-      setRequests(requestData.data || []);
+      const { data } = await supabase
+        .from('blood_requests')
+        .select('*')
+        .in('status', ['active', 'verified'])
+        .order('created_at', { ascending: false });
+      setRequests(data || []);
     } catch (error) {
       console.error('Failed to load requests:', error);
       setRequests([]);
@@ -28,29 +32,59 @@ const RequestMonitoring = () => {
 
   const handleVerifyRequest = async (requestId) => {
     try {
-      // Add verification logic here
-      console.log('Verifying request:', requestId);
-      loadRequests();
+      const { error } = await supabase
+        .from('blood_requests')
+        .update({ status: 'verified' })
+        .eq('id', requestId);
+      
+      if (error) throw error;
+      
+      // Update local state immediately
+      setRequests(prev => prev.map(req => 
+        req.id === requestId ? { ...req, status: 'verified', verified: true } : req
+      ));
+      
+      alert('অনুরোধটি যাচাই করা হয়েছে');
     } catch (error) {
       console.error('Failed to verify request:', error);
+      alert('যাচাই করতে সমস্যা হয়েছে');
+    }
+  };
+
+  const handleViewDetails = (request) => {
+    alert(`রোগী: ${request.patientName}\nরক্তের গ্রুপ: ${request.bloodGroup}\nপ্রয়োজন: ${request.unitsNeeded} ব্যাগ\nহাসপাতাল: ${request.hospital}\nএলাকা: ${request.location}\nযোগাযোগ: ${request.contactPerson} - ${request.contactPhone}\nবিস্তারিত: ${request.description}`);
+  };
+
+  const handleContact = (request) => {
+    if (confirm(`${request.contactPerson} এর সাথে যোগাযোগ করবেন?\nফোন: ${request.contactPhone}`)) {
+      window.location.href = `tel:${request.contactPhone}`;
+    }
+  };
+
+  const handleReport = (requestId) => {
+    const reason = prompt('রিপোর্ট করার কারণ লিখুন:');
+    if (reason) {
+      alert(`অনুরোধ ID ${requestId} রিপোর্ট করা হয়েছে।\nকারণ: ${reason}`);
     }
   };
 
   const handleCancelRequest = async (requestId) => {
-    console.log('Attempting to cancel request ID:', requestId, 'Type:', typeof requestId);
-    console.log('All requests:', requests.map(r => ({ id: r.id, type: typeof r.id })));
     if (confirm('আপনি কি এই অনুরোধটি বাতিল করতে চান?')) {
       try {
-        const result = await bloodRequestService.cancelRequest(requestId);
-        console.log('Cancel result:', result);
-        alert('অনুরোধটি বাতিল করা হয়েছে');
+        const { error } = await supabase
+          .from('blood_requests')
+          .delete()
+          .eq('id', requestId);
+          
+        if (error) throw error;
+        
         // Remove from local state immediately
         setRequests(prev => prev.filter(req => req.id !== requestId));
-        // Then reload fresh data
-        await loadRequests(true);
+        
+        alert('অনুরোধটি বাতিল করা হয়েছে');
       } catch (error) {
         console.error('Failed to cancel request:', error);
-        alert('অনুরোধ বাতিল করতে সমস্যা হয়েছে: ' + error.message);
+        alert('অনুরোধ বাতিল করতে সমস্যা হয়েছে');
       }
     }
   };
@@ -80,8 +114,8 @@ const RequestMonitoring = () => {
   const getStatusColor = (status) => {
     const colors = {
       pending: 'bg-warning/10 text-warning border-warning/20',
-      in_progress: 'bg-trust/10 text-trust border-trust/20',
-      fulfilled: 'bg-success/10 text-success border-success/20',
+      verified: 'bg-success/10 text-success border-success/20',
+      fulfilled: 'bg-trust/10 text-trust border-trust/20',
       cancelled: 'bg-error/10 text-error border-error/20'
     };
     return colors?.[status] || 'bg-muted/10 text-muted-foreground border-muted/20';
@@ -90,7 +124,7 @@ const RequestMonitoring = () => {
   const getStatusText = (status) => {
     const texts = {
       pending: 'অপেক্ষমান',
-      in_progress: 'প্রক্রিয়াধীন',
+      verified: 'যাচাইকৃত',
       fulfilled: 'সম্পন্ন',
       cancelled: 'বাতিল'
     };
@@ -116,16 +150,17 @@ const RequestMonitoring = () => {
     patientName: r.patient_name,
     bloodGroup: r.blood_group,
     unitsNeeded: r.units_needed,
-    urgency: r.urgency_level === 'emergency' ? 'critical' : r.urgency_level,
-    hospital: r.hospital,
-    location: r.location,
+    urgency: r.urgency === 'emergency' ? 'critical' : r.urgency,
+    hospital: r.hospital_name,
+    hospitalAddress: r.hospital_address,
+    location: `${r.upazila || ''}, ${r.district || ''}`,
     contactPerson: r.contact_person,
-    contactPhone: r.contact_phone,
+    contactPhone: r.contact_mobile,
     requestDate: new Date(r.created_at),
-    status: 'pending',
+    status: r.status === 'verified' ? 'verified' : 'pending',
     description: r.additional_info || 'কোন অতিরিক্ত তথ্য নেই',
     responses: 0,
-    verified: r.verified || false
+    verified: r.status === 'verified' || r.verified || false
   }));
 
   const filteredRequests = displayRequests?.filter(request => {
@@ -136,7 +171,7 @@ const RequestMonitoring = () => {
   const tabs = [
     { id: 'all', label: 'সব অনুরোধ', count: displayRequests?.length },
     { id: 'pending', label: 'অপেক্ষমান', count: displayRequests?.filter(r => r?.status === 'pending')?.length },
-    { id: 'in_progress', label: 'প্রক্রিয়াধীন', count: displayRequests?.filter(r => r?.status === 'in_progress')?.length },
+    { id: 'verified', label: 'যাচাইকৃত', count: displayRequests?.filter(r => r?.status === 'verified')?.length },
     { id: 'fulfilled', label: 'সম্পন্ন', count: displayRequests?.filter(r => r?.status === 'fulfilled')?.length }
   ];
 
@@ -211,6 +246,12 @@ const RequestMonitoring = () => {
                     <Icon name="MapPin" size={14} />
                     <span className="font-bengali">{request?.hospital}</span>
                   </div>
+                  {request?.hospitalAddress && (
+                    <div className="flex items-center space-x-2">
+                      <Icon name="Building" size={14} />
+                      <span className="font-bengali">{request?.hospitalAddress}</span>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-2">
                     <Icon name="Navigation" size={14} />
                     <span className="font-bengali">{request?.location}</span>
@@ -242,19 +283,39 @@ const RequestMonitoring = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 {!request?.verified && (
-                  <Button variant="success" size="sm" iconName="CheckCircle">
+                  <Button 
+                    variant="success" 
+                    size="sm" 
+                    iconName="CheckCircle"
+                    onClick={() => handleVerifyRequest(request?.id)}
+                  >
                     <span className="font-bengali">যাচাই করুন</span>
                   </Button>
                 )}
-                <Button variant="outline" size="sm" iconName="Eye">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  iconName="Eye"
+                  onClick={() => handleViewDetails(request)}
+                >
                   <span className="font-bengali">বিস্তারিত</span>
                 </Button>
-                <Button variant="outline" size="sm" iconName="MessageSquare">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  iconName="MessageSquare"
+                  onClick={() => handleContact(request)}
+                >
                   <span className="font-bengali">যোগাযোগ</span>
                 </Button>
               </div>
               <div className="flex items-center space-x-2">
-                <Button variant="outline" size="sm" iconName="Flag">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  iconName="Flag"
+                  onClick={() => handleReport(request?.id)}
+                >
                   <span className="font-bengali">রিপোর্ট</span>
                 </Button>
                 <Button 
@@ -278,8 +339,8 @@ const RequestMonitoring = () => {
             <div className="text-xs text-muted-foreground font-bengali">অপেক্ষমান</div>
           </div>
           <div className="text-center">
-            <div className="text-lg font-bold text-trust">{displayRequests?.filter(r => r?.status === 'in_progress')?.length || 0}</div>
-            <div className="text-xs text-muted-foreground font-bengali">প্রক্রিয়াধীন</div>
+            <div className="text-lg font-bold text-success">{displayRequests?.filter(r => r?.status === 'verified')?.length || 0}</div>
+            <div className="text-xs text-muted-foreground font-bengali">যাচাইকৃত</div>
           </div>
           <div className="text-center">
             <div className="text-lg font-bold text-success">{displayRequests?.filter(r => r?.status === 'fulfilled')?.length || 0}</div>

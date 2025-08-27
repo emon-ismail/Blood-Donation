@@ -130,6 +130,12 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
           <Icon name="MapPin" size={16} className="flex-shrink-0 mt-0.5" />
           <span className="font-bengali break-words">{request?.hospital}</span>
         </div>
+        {request?.hospitalAddress && (
+          <div className="flex items-start space-x-2 text-sm text-text-secondary">
+            <Icon name="Building" size={16} className="flex-shrink-0 mt-0.5" />
+            <span className="font-bengali break-words">{request?.hospitalAddress}</span>
+          </div>
+        )}
         <div className="flex items-start space-x-2 text-sm text-text-secondary">
           <Icon name="Navigation" size={16} className="flex-shrink-0 mt-0.5" />
           <span className="font-bengali break-words">{request?.location}</span>

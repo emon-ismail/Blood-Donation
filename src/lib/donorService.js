@@ -1,5 +1,21 @@
 import { supabase } from './supabase'
 
+// Generate unique donor ID
+const generateDonorId = () => {
+  const prefix = 'DN';
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `${prefix}${timestamp}${random}`;
+};
+
+// Generate unique blood request ID
+const generateRequestId = () => {
+  const prefix = 'BR';
+  const timestamp = Date.now().toString().slice(-6);
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `${prefix}${timestamp}${random}`;
+};
+
 export const donorService = {
   // Get all donors
   async getAllDonors() {
@@ -135,6 +151,18 @@ export const donorService = {
       .from('donors')
       .select('*')
       .eq('mobile', mobile)
+      .maybeSingle()
+
+    if (error) throw error
+    return data
+  },
+
+  // Get donor by unique ID
+  async getDonorById(donorId) {
+    const { data, error } = await supabase
+      .from('donors')
+      .select('*')
+      .eq('donor_id', donorId)
       .maybeSingle()
 
     if (error) throw error

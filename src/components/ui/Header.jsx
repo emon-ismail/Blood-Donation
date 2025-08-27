@@ -4,6 +4,7 @@ import Icon from '../AppIcon';
 import Button from './Button';
 import LanguageToggle from './LanguageToggle';
 import { useLanguage } from '../../contexts/LanguageContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { t } from '../../utils/translations';
 
 const Header = ({ className = '' }) => {
@@ -12,6 +13,7 @@ const Header = ({ className = '' }) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { language } = useLanguage();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -104,6 +106,32 @@ const Header = ({ className = '' }) => {
             >
               <span className={language === 'bn' ? 'font-bengali' : ''}>{t('emergency', language)}</span>
             </Button>
+            
+            {/* Login/Logout Button */}
+            {user ? (
+              <Button
+                variant="outline"
+                size="sm"
+                iconName="LogOut"
+                iconPosition="left"
+                onClick={() => {
+                  logout();
+                  navigate('/donor-login');
+                }}
+              >
+                <span className="font-bengali">লগআউট</span>
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                size="sm"
+                iconName="LogIn"
+                iconPosition="left"
+                onClick={() => handleNavigation('/donor-login')}
+              >
+                <span className="font-bengali">লগইন</span>
+              </Button>
+            )}
 
             {/* More Menu */}
             <div className="relative">

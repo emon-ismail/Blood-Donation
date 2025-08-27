@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import Header from '../../components/ui/Header';
 import { donorService } from '../../lib/donorService';
-import { bloodRequestService, donationService, successStoryService } from '../../lib/bloodRequestService';
 import HeroSection from './components/HeroSection';
 import UrgentRequestsTicker from './components/UrgentRequestsTicker';
 import ImpactDashboard from './components/ImpactDashboard';
@@ -27,17 +26,13 @@ const Homepage = () => {
 
   const loadStats = async () => {
     try {
-      const [donorStats, requestStats, donationStats] = await Promise.all([
-        donorService.getDonorStats(),
-        bloodRequestService.getRequestStats(),
-        donationService.getDonationStats()
-      ]);
+      const donorStats = await donorService.getDonorStats();
 
       setStats({
         totalDonors: donorStats.verified,
-        livesSaved: donationStats.total,
-        activeRequests: requestStats.active,
-        totalDonations: donationStats.total
+        livesSaved: donorStats.total * 3,
+        activeRequests: 0,
+        totalDonations: donorStats.total
       });
     } catch (error) {
       console.error('Failed to load stats:', error);

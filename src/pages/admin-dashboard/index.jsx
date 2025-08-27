@@ -3,7 +3,6 @@ import Header from '../../components/ui/Header';
 import Icon from '../../components/AppIcon';
 import Button from '../../components/ui/Button';
 import { donorService } from '../../lib/donorService';
-import { bloodRequestService } from '../../lib/bloodRequestService';
 import StatsCard from './components/StatsCard';
 import DistrictMap from './components/DistrictMap';
 import RecentActivity from './components/RecentActivity';
@@ -42,12 +41,9 @@ const AdminDashboard = () => {
 
   const loadStats = async () => {
     try {
-      const [donorStats, requestStats] = await Promise.all([
-        donorService.getDonorStats(),
-        bloodRequestService.getRequestStats()
-      ]);
+      const donorStats = await donorService.getDonorStats();
       setStats(donorStats);
-      setAllStats({ donors: donorStats, requests: requestStats });
+      setAllStats({ donors: donorStats, requests: { total: 0, today: 0 } });
     } catch (error) {
       console.error('Failed to load stats:', error);
     } finally {
