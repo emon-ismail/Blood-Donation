@@ -4,17 +4,39 @@ export const adminService = {
   // Login admin
   async login(username, password) {
     try {
-      const { data, error } = await supabase
+      // Try login with username first, then email
+      let { data, error } = await supabase
         .from('admin_users')
-        .select('id, username, email, full_name, role, is_active')
+        .select('id, username, email, full_name, role, is_active, password_hash')
         .eq('username', username)
-        .eq('password_hash', this.hashPassword(password))
         .eq('is_active', true)
         .single();
 
+      // If not found by username, try by email
       if (error || !data) {
-        throw new Error('Invalid credentials');
+        const { data: emailData, error: emailError } = await supabase
+          .from('admin_users')
+          .select('id, username, email, full_name, role, is_active, password_hash')
+          .eq('email', username)
+          .eq('is_active', true)
+          .single();
+        
+        data = emailData;
+        error = emailError;
       }
+
+      if (error || !data) {
+        throw new Error('User not found');
+      }
+
+      // Check password
+      const hashedPassword = this.hashPassword(password);
+      if (data.password_hash !== hashedPassword) {
+        throw new Error('Invalid password');
+      }
+
+      // Remove password_hash from returned data
+      delete data.password_hash;
 
       // Update last login
       await supabase

@@ -68,6 +68,29 @@ const RequestMonitoring = () => {
     }
   };
 
+  const handleMarkFulfilled = async (requestId) => {
+    if (confirm('এই অনুরোধটি কি সম্পন্ন হয়েছে?')) {
+      try {
+        const { error } = await supabase
+          .from('blood_requests')
+          .update({ status: 'fulfilled' })
+          .eq('id', requestId);
+          
+        if (error) throw error;
+        
+        // Update local state immediately
+        setRequests(prev => prev.map(req => 
+          req.id === requestId ? { ...req, status: 'fulfilled' } : req
+        ));
+        
+        alert('অনুরোধটি সম্পন্ন হিসেবে চিহ্নিত করা হয়েছে');
+      } catch (error) {
+        console.error('Failed to mark as fulfilled:', error);
+        alert('সম্পন্ন করতে সমস্যা হয়েছে');
+      }
+    }
+  };
+
   const handleCancelRequest = async (requestId) => {
     if (confirm('আপনি কি এই অনুরোধটি বাতিল করতে চান?')) {
       try {
@@ -310,6 +333,16 @@ const RequestMonitoring = () => {
                 </Button>
               </div>
               <div className="flex items-center space-x-2">
+                {request?.status !== 'fulfilled' && (
+                  <Button 
+                    variant="success" 
+                    size="sm" 
+                    iconName="CheckCircle2"
+                    onClick={() => handleMarkFulfilled(request?.id)}
+                  >
+                    <span className="font-bengali">সম্পন্ন</span>
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   size="sm" 

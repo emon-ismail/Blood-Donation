@@ -11,6 +11,7 @@ import RequestMonitoring from './components/RequestMonitoring';
 import AnalyticsChart from './components/AnalyticsChart';
 import SystemAlerts from './components/SystemAlerts';
 import AdminLogin from './components/AdminLogin';
+import AdminManagement from './components/AdminManagement';
 
 const AdminDashboard = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -25,6 +26,10 @@ const AdminDashboard = () => {
     const adminLoggedIn = localStorage.getItem('adminLoggedIn');
     if (adminLoggedIn === 'true') {
       setIsLoggedIn(true);
+      // Set default view based on role
+      if (userRole === 'moderator') {
+        setSelectedView('requests');
+      }
     }
 
     const timer = setInterval(() => {
@@ -102,14 +107,34 @@ const AdminDashboard = () => {
     }
   ] : [];
 
-  const viewOptions = [
-    { id: 'overview', label: 'সংক্ষিপ্ত বিবরণ', icon: 'LayoutDashboard' },
-    { id: 'donors', label: 'দাতা ব্যবস্থাপনা', icon: 'Users' },
-    { id: 'requests', label: 'অনুরোধ মনিটরিং', icon: 'Heart' },
-    { id: 'analytics', label: 'বিশ্লেষণ', icon: 'BarChart3' },
-    { id: 'users', label: 'অ্যাডমিন ব্যবস্থাপনা', icon: 'Shield' },
-    { id: 'alerts', label: 'সতর্কতা', icon: 'AlertTriangle' }
-  ];
+  // Get admin data from localStorage
+  const adminData = JSON.parse(localStorage.getItem('adminData') || '{}');
+  const userRole = adminData.role || 'admin';
+
+  // Define permissions based on role
+  const getViewOptions = (role) => {
+    const allOptions = [
+      { id: 'overview', label: 'সংক্ষিপ্ত বিবরণ', icon: 'LayoutDashboard' },
+      { id: 'donors', label: 'দাতা ব্যবস্থাপনা', icon: 'Users' },
+      { id: 'requests', label: 'অনুরোধ মনিটরিং', icon: 'Heart' },
+      { id: 'analytics', label: 'বিশ্লেষণ', icon: 'BarChart3' },
+      { id: 'users', label: 'অ্যাডমিন ব্যবস্থাপনা', icon: 'Shield' },
+      { id: 'alerts', label: 'সতর্কতা', icon: 'AlertTriangle' }
+    ];
+
+    switch (role) {
+      case 'moderator':
+        return [{ id: 'requests', label: 'অনুরোধ মনিটরিং', icon: 'Heart' }];
+      case 'admin':
+        return allOptions.filter(option => option.id !== 'users');
+      case 'super_admin':
+        return allOptions;
+      default:
+        return [{ id: 'overview', label: 'সংক্ষিপ্ত বিবরণ', icon: 'LayoutDashboard' }];
+    }
+  };
+
+  const viewOptions = getViewOptions(userRole);
 
   const renderContent = () => {
     switch (selectedView) {
@@ -122,10 +147,7 @@ const AdminDashboard = () => {
       case 'alerts':
         return <SystemAlerts />;
       case 'users':
-        return <div className="bg-white rounded-lg p-6 shadow-brand">
-          <h3 className="text-lg font-bengali font-bold mb-4">অ্যাডমিন ব্যবস্থাপনা</h3>
-          <p className="font-bengali text-muted-foreground">অ্যাডমিন ইউজার যোগ, সম্পাদনা এবং মুছে ফেলার সুবিধা</p>
-        </div>;
+        return <AdminManagement />;
       default:
         return (
           <div className="space-y-6">
@@ -201,10 +223,13 @@ const AdminDashboard = () => {
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
               <div className="mb-4 lg:mb-0">
                 <h1 className="text-3xl font-bold text-text-primary font-bengali mb-2">
-                  অ্যাডমিন ড্যাশবোর্ড
+                  {userRole === 'moderator' ? 'মডারেটর ড্যাশবোর্ড' : 
+                   userRole === 'super_admin' ? 'সুপার অ্যাডমিন ড্যাশবোর্ড' : 
+                   'অ্যাডমিন ড্যাশবোর্ড'}
                 </h1>
                 <p className="text-muted-foreground font-bengali">
-                  LifeLink Bangladesh প্ল্যাটফর্ম ব্যবস্থাপনা কেন্দ্র
+                  {userRole === 'moderator' ? 'রক্তের অনুরোধ যাচাই ও অনুমোদন' : 
+                   'LifeLink Bangladesh প্ল্যাটফর্ম ব্যবস্থাপনা কেন্দ্র'}
                 </p>
               </div>
               
@@ -216,24 +241,43 @@ const AdminDashboard = () => {
                   </span>
                 </div>
                 
-                <div className="flex items-center space-x-2">
-                  <Button variant="outline" size="sm" iconName="Download">
-                    <span className="font-bengali">রিপোর্ট এক্সপোর্ট</span>
-                  </Button>
-                  <Button variant="default" size="sm" iconName="Settings">
-                    <span className="font-bengali">সেটিংস</span>
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    iconName="LogOut"
-                    onClick={() => {
-                      localStorage.removeItem('adminLoggedIn');
-                      setIsLoggedIn(false);
-                    }}
-                  >
-                    <span className="font-bengali">লগআউট</span>
-                  </Button>
+                <div className="flex items-center space-x-4">
+                  {/* Admin Profile */}
+                  <div className="flex items-center space-x-3 bg-white rounded-lg px-4 py-2 shadow-sm border">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                      <Icon name="User" size={16} color="white" />
+                    </div>
+                    <div className="text-sm">
+                      <div className="font-medium text-text-primary">
+                        {adminData.full_name || adminData.username || 'Admin'}
+                      </div>
+                      <div className="text-xs text-muted-foreground font-bengali">
+                        {userRole === 'super_admin' ? 'সুপার অ্যাডমিন' :
+                         userRole === 'moderator' ? 'মডারেটর' : 'অ্যাডমিন'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Button variant="outline" size="sm" iconName="Download">
+                      <span className="font-bengali">রিপোর্ট এক্সপোর্ট</span>
+                    </Button>
+                    <Button variant="default" size="sm" iconName="Settings">
+                      <span className="font-bengali">সেটিংস</span>
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      iconName="LogOut"
+                      onClick={() => {
+                        localStorage.removeItem('adminLoggedIn');
+                        localStorage.removeItem('adminData');
+                        setIsLoggedIn(false);
+                      }}
+                    >
+                      <span className="font-bengali">লগআউট</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

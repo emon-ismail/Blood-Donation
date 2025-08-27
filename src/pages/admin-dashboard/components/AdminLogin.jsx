@@ -46,11 +46,11 @@ const AdminLogin = ({ onLogin }) => {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Input
-            label="ইউজারনেম"
+            label="ইউজারনেম বা ইমেইল"
             type="text"
             value={credentials.username}
             onChange={(e) => setCredentials({...credentials, username: e.target.value})}
-            placeholder="অ্যাডমিন ইউজারনেম"
+            placeholder="ইউজারনেম বা ইমেইল"
             iconName="User"
             required
           />
