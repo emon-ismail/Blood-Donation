@@ -287,13 +287,13 @@ const AdminDashboard = () => {
           </div>
 
           {/* Navigation Tabs */}
-          <div className="mb-8">
-            <div className="flex space-x-1 bg-muted rounded-lg p-1 overflow-x-auto scrollbar-hide">
+          <div className="mb-8 overflow-hidden">
+            <div className="flex space-x-1 bg-muted rounded-lg p-1 overflow-x-auto scrollbar-hide" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
               {viewOptions?.map((option) => (
                 <button
                   key={option?.id}
                   onClick={() => setSelectedView(option?.id)}
-                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
+                  className={`flex items-center space-x-1 sm:space-x-2 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap flex-shrink-0 ${
                     selectedView === option?.id
                       ? 'bg-white text-primary shadow-sm'
                       : 'text-muted-foreground hover:text-text-primary'

@@ -212,21 +212,23 @@ const RequestMonitoring = () => {
         </div>
       </div>
       {/* Tabs */}
-      <div className="flex space-x-1 mb-4 sm:mb-6 bg-muted rounded-lg p-1 overflow-x-auto">
-        {tabs?.map((tab) => (
-          <button
-            key={tab?.id}
-            onClick={() => setSelectedTab(tab?.id)}
-            className={`flex-1 px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 font-bengali whitespace-nowrap ${
-              selectedTab === tab?.id
-                ? 'bg-white text-primary shadow-sm'
-                : 'text-muted-foreground hover:text-text-primary'
-            }`}
-          >
-            <span className="hidden sm:inline">{tab?.label} ({tab?.count})</span>
-            <span className="sm:hidden">{tab?.label.split(' ')[0]} ({tab?.count})</span>
-          </button>
-        ))}
+      <div className="mb-4 sm:mb-6 overflow-hidden">
+        <div className="flex space-x-1 bg-muted rounded-lg p-1 overflow-x-auto" style={{scrollbarWidth: 'none', msOverflowStyle: 'none'}}>
+          {tabs?.map((tab) => (
+            <button
+              key={tab?.id}
+              onClick={() => setSelectedTab(tab?.id)}
+              className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-medium rounded-md transition-all duration-200 font-bengali whitespace-nowrap flex-shrink-0 ${
+                selectedTab === tab?.id
+                  ? 'bg-white text-primary shadow-sm'
+                  : 'text-muted-foreground hover:text-text-primary'
+              }`}
+            >
+              <span className="hidden sm:inline">{tab?.label} ({tab?.count})</span>
+              <span className="sm:hidden">{tab?.label.split(' ')[0]} ({tab?.count})</span>
+            </button>
+          ))}
+        </div>
       </div>
       {/* Requests List */}
       <div className="space-y-4 max-h-96 overflow-y-auto">
