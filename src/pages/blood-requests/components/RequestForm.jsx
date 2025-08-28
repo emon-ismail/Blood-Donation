@@ -187,19 +187,26 @@ const RequestForm = ({ onSubmit, onCancel }) => {
             <span>হাসপাতালের তথ্য</span>
           </h3>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <Icon name="Building2" size={18} className="text-primary" />
+              <span className="font-medium text-text-primary font-bengali">হাসপাতাল নির্বাচন করুন</span>
+            </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-primary font-bengali">
                 হাসপাতালের নাম <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                list="hospitals"
-                value={formData?.hospital}
-                onChange={(e) => setFormData(prev => ({ ...prev, hospital: e.target.value }))}
-                placeholder="যেমন: চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল"
-                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  list="hospitals"
+                  value={formData?.hospital}
+                  onChange={(e) => setFormData(prev => ({ ...prev, hospital: e.target.value }))}
+                  placeholder="হাসপাতালের নাম লিখুন বা তালিকা থেকে নির্বাচন করুন"
+                  className="w-full pl-10 pr-3 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-bengali"
+                />
+                <Icon name="Search" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              </div>
               <datalist id="hospitals">
                 <option value="ঢাকা মেডিকেল কলেজ হাসপাতাল" />
                 <option value="চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল" />
@@ -224,7 +231,10 @@ const RequestForm = ({ onSubmit, onCancel }) => {
                 <option value="পপুলার হাসপাতাল" />
               </datalist>
               {errors?.hospital && (
-                <p className="text-sm text-red-500 font-bengali">{errors?.hospital}</p>
+                <p className="text-sm text-red-500 font-bengali flex items-center space-x-1">
+                  <Icon name="AlertCircle" size={14} />
+                  <span>{errors?.hospital}</span>
+                </p>
               )}
             </div>
 
@@ -232,14 +242,17 @@ const RequestForm = ({ onSubmit, onCancel }) => {
               <label className="block text-sm font-medium text-text-primary font-bengali">
                 এলাকা/জেলা <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                list="locations"
-                value={formData?.location}
-                onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                placeholder="যেমন: চট্টগ্রাম, ঢাকা, সিলেট"
-                className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  list="locations"
+                  value={formData?.location}
+                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
+                  placeholder="এলাকা বা জেলার নাম লিখুন"
+                  className="w-full pl-10 pr-3 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-bengali"
+                />
+                <Icon name="MapPin" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              </div>
               <datalist id="locations">
                 <option value="ঢাকা" />
                 <option value="চট্টগ্রাম" />
@@ -307,8 +320,21 @@ const RequestForm = ({ onSubmit, onCancel }) => {
                 <option value="শেরপুর" />
               </datalist>
               {errors?.location && (
-                <p className="text-sm text-red-500 font-bengali">{errors?.location}</p>
+                <p className="text-sm text-red-500 font-bengali flex items-center space-x-1">
+                  <Icon name="AlertCircle" size={14} />
+                  <span>{errors?.location}</span>
+                </p>
               )}
+            </div>
+            
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-start space-x-2">
+                <Icon name="Info" size={16} className="text-blue-600 mt-0.5" />
+                <div className="text-sm text-blue-700 font-bengali">
+                  <p className="font-medium mb-1">সাহায্যকারী তথ্য:</p>
+                  <p>হাসপাতালের নাম লিখতে শুরু করলে সুঝাব দেখানো হবে। এলাকার নাম সঠিকভাবে লিখুন যাতে রক্তদাতারা সহজেই খুঁজে পান।</p>
+                </div>
+              </div>
             </div>
           </div>
 
