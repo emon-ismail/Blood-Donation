@@ -19,6 +19,42 @@ const RequestForm = ({ onSubmit, onCancel }) => {
   });
 
   const [errors, setErrors] = useState({});
+  
+  // English to Bengali mapping
+  const locationMapping = {
+    'dhaka': 'ঢাকা',
+    'chittagong': 'চট্টগ্রাম',
+    'chattogram': 'চট্টগ্রাম',
+    'sylhet': 'সিলেট',
+    'rajshahi': 'রাজশাহী',
+    'khulna': 'খুলনা',
+    'barisal': 'বরিশাল',
+    'barishal': 'বরিশাল',
+    'rangpur': 'রংপুর',
+    'mymensingh': 'ময়মনসিংহ',
+    'comilla': 'কুমিল্লা',
+    'cumilla': 'কুমিল্লা',
+    'gazipur': 'গাজীপুর',
+    'narayanganj': 'নারায়ণগঞ্জ',
+    'tangail': 'টাঙ্গাইল',
+    "cox's bazar": 'কক্সবাজার',
+    'coxsbazar': 'কক্সবাজার',
+    'jessore': 'যশোর',
+    'jashore': 'যশোর',
+    'bogra': 'বগুড়া',
+    'bogura': 'বগুড়া'
+  };
+  
+  const hospitalMapping = {
+    'dhaka medical college hospital': 'ঢাকা মেডিকেল কলেজ হাসপাতাল',
+    'chittagong medical college hospital': 'চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল',
+    'chattogram medical college hospital': 'চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল',
+    'sylhet mag osmani medical college hospital': 'সিলেট এমএজি ওসমানী মেডিকেল কলেজ হাসপাতাল',
+    'square hospital': 'স্কয়ার হাসপাতাল',
+    'united hospital': 'ইউনাইটেড হাসপাতাল',
+    'apollo hospital dhaka': 'অ্যাপোলো হাসপাতাল ঢাকা',
+    'labaid hospital': 'লাবএইড হাসপাতাল'
+  };
 
   const bloodGroups = [
     'A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'
@@ -168,15 +204,35 @@ const RequestForm = ({ onSubmit, onCancel }) => {
               required
             />
 
-            <Input
-              label="কবে রক্তের প্রয়োজন"
-              name="requiredBy"
-              type="datetime-local"
-              value={formData?.requiredBy}
-              onChange={handleInputChange}
-              error={errors?.requiredBy}
-              required
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-text-primary font-bengali">
+                কবে রক্তের প্রয়োজন <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="datetime-local"
+                  name="requiredBy"
+                  value={formData?.requiredBy}
+                  onChange={handleInputChange}
+                  className="w-full pl-10 pr-3 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-bengali [&::-webkit-calendar-picker-indicator]:bg-primary [&::-webkit-calendar-picker-indicator]:rounded [&::-webkit-calendar-picker-indicator]:p-1 [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-datetime-edit]:text-gray-700 [&::-webkit-datetime-edit-fields-wrapper]:p-0 [&::-webkit-datetime-edit-text]:text-gray-500"
+                  min={new Date().toISOString().slice(0, 16)}
+                  style={{
+                    colorScheme: 'light',
+                    fontSize: '14px'
+                  }}
+                />
+                <Icon name="Calendar" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+              </div>
+              {errors?.requiredBy && (
+                <p className="text-sm text-red-500 font-bengali flex items-center space-x-1">
+                  <Icon name="AlertCircle" size={14} />
+                  <span>{errors?.requiredBy}</span>
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground font-bengali">
+                তারিখ ও সময় নির্বাচন করুন
+              </p>
+            </div>
           </div>
         </div>
 
@@ -201,13 +257,22 @@ const RequestForm = ({ onSubmit, onCancel }) => {
                   type="text"
                   list="hospitals"
                   value={formData?.hospital}
-                  onChange={(e) => setFormData(prev => ({ ...prev, hospital: e.target.value }))}
-                  placeholder="হাসপাতালের নাম লিখুন বা তালিকা থেকে নির্বাচন করুন"
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    const bengaliValue = hospitalMapping[value.toLowerCase()] || value;
+                    setFormData(prev => ({ ...prev, hospital: bengaliValue }));
+                  }}
+                  placeholder="হাসপাতালের নাম লিখুন (ইংরেজি বা বাংলায়)"
                   className="w-full pl-10 pr-3 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-bengali"
                 />
                 <Icon name="Search" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               </div>
               <datalist id="hospitals">
+                <option value="ঢাকা মেডিকেল কলেজ হাসপাতাল" />
+                <option value="চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল" />
+                <option value="সিলেট এমএজি ওসমানী মেডিকেল কলেজ হাসপাতাল" />
+                <option value="স্কয়ার হাসপাতাল" />
+                <option value="ইউনাইটেড হাসপাতাল" />
                 <option value="ঢাকা মেডিকেল কলেজ হাসপাতাল" />
                 <option value="চট্টগ্রাম মেডিকেল কলেজ হাসপাতাল" />
                 <option value="সিলেট এমএজি ওসমানী মেডিকেল কলেজ হাসপাতাল" />
@@ -240,20 +305,48 @@ const RequestForm = ({ onSubmit, onCancel }) => {
 
             <div className="space-y-2">
               <label className="block text-sm font-medium text-text-primary font-bengali">
-                এলাকা/জেলা <span className="text-red-500">*</span>
+                জেলা নির্বাচন করুন <span className="text-red-500">*</span>
               </label>
               <div className="relative">
-                <input
-                  type="text"
-                  list="locations"
+                <select
                   value={formData?.location}
                   onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  placeholder="এলাকা বা জেলার নাম লিখুন"
-                  className="w-full pl-10 pr-3 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-bengali"
-                />
+                  className="w-full pl-10 pr-8 py-3 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent font-bengali appearance-none bg-white"
+                >
+                  <option value="">জেলা নির্বাচন করুন</option>
+                  <option value="ঢাকা">ঢাকা</option>
+                  <option value="চট্টগ্রাম">চট্টগ্রাম</option>
+                  <option value="সিলেট">সিলেট</option>
+                  <option value="রাজশাহী">রাজশাহী</option>
+                  <option value="খুলনা">খুলনা</option>
+                  <option value="বরিশাল">বরিশাল</option>
+                  <option value="রংপুর">রংপুর</option>
+                  <option value="ময়মনসিংহ">ময়মনসিংহ</option>
+                  <option value="কুমিল্লা">কুমিল্লা</option>
+                  <option value="ফরিদপুর">ফরিদপুর</option>
+                  <option value="গাজীপুর">গাজীপুর</option>
+                  <option value="নারায়ণগঞ্জ">নারায়ণগঞ্জ</option>
+                  <option value="টাঙ্গাইল">টাঙ্গাইল</option>
+                  <option value="কক্সবাজার">কক্সবাজার</option>
+                  <option value="যশোর">যশোর</option>
+                  <option value="বগুড়া">বগুড়া</option>
+                  <option value="নোয়াখালী">নোয়াখালী</option>
+                  <option value="পাবনা">পাবনা</option>
+                  <option value="নাটোর">নাটোর</option>
+                  <option value="দিনাজপুর">দিনাজপুর</option>
+                </select>
                 <Icon name="MapPin" size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
+                <Icon name="ChevronDown" size={16} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground" />
               </div>
               <datalist id="locations">
+                <option value="ঢাকা" />
+                <option value="চট্টগ্রাম" />
+                <option value="সিলেট" />
+                <option value="রাজশাহী" />
+                <option value="খুলনা" />
+                <option value="বরিশাল" />
+                <option value="রংপুর" />
+                <option value="ময়মনসিংহ" />
                 <option value="ঢাকা" />
                 <option value="চট্টগ্রাম" />
                 <option value="সিলেট" />
@@ -332,7 +425,7 @@ const RequestForm = ({ onSubmit, onCancel }) => {
                 <Icon name="Info" size={16} className="text-blue-600 mt-0.5" />
                 <div className="text-sm text-blue-700 font-bengali">
                   <p className="font-medium mb-1">সাহায্যকারী তথ্য:</p>
-                  <p>হাসপাতালের নাম লিখতে শুরু করলে সুঝাব দেখানো হবে। এলাকার নাম সঠিকভাবে লিখুন যাতে রক্তদাতারা সহজেই খুঁজে পান।</p>
+                  <p>হাসপাতালের নাম লিখতে শুরু করলে অটো নাম দেখানো হবে। এলাকার নাম সঠিকভাবে লিখুন যাতে রক্তদাতারা সহজেই খুঁজে পান।</p>
                 </div>
               </div>
             </div>
