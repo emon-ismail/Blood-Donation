@@ -46,17 +46,8 @@ const FindDonors = () => {
       
       // Transform data for display
       const transformedDonors = donors.map(donor => {
-        // Calculate availability based on last donation
-        let availability = 'available';
-        if (donor.last_donation_date) {
-          const lastDonation = new Date(donor.last_donation_date);
-          const today = new Date();
-          const daysDiff = Math.floor((today - lastDonation) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff < 90) { // Less than 3 months
-            availability = 'recently_donated';
-          }
-        }
+        // Use stored availability from registration
+        let availability = donor.availability || 'available';
         
         return {
           id: donor.id,
@@ -124,17 +115,8 @@ const FindDonors = () => {
           calculatedDistance = searchDistrict === donorDistrict ? '5.0' : '50.0';
         }
         
-        // Calculate availability based on last donation
-        let availability = 'available';
-        if (donor.last_donation_date) {
-          const lastDonation = new Date(donor.last_donation_date);
-          const today = new Date();
-          const daysDiff = Math.floor((today - lastDonation) / (1000 * 60 * 60 * 24));
-          
-          if (daysDiff < 90) { // Less than 3 months
-            availability = 'recently_donated';
-          }
-        }
+        // Use stored availability from registration
+        let availability = donor.availability || 'available';
         
         return {
           id: donor.id,
