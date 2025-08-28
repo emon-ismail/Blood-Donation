@@ -35,7 +35,26 @@ const BloodRequestsPage = () => {
 
   useEffect(() => {
     loadData();
+    // Track page views for all visible requests
+    trackPageViews();
   }, []);
+  
+  const trackPageViews = async () => {
+    try {
+      if (requests.length > 0) {
+        // Update view count for all visible requests
+        const updates = requests.map(request => 
+          supabase
+            .from('blood_requests')
+            .update({ views: (request.views || 0) + 1 })
+            .eq('id', request.id)
+        );
+        await Promise.all(updates);
+      }
+    } catch (error) {
+      console.error('Failed to track views:', error);
+    }
+  };
 
   const loadData = async (currentFilters = {}, page = 1, showLoading = true) => {
     try {
@@ -110,9 +129,9 @@ const BloodRequestsPage = () => {
     additionalInfo: request?.additional_info || '',
     postedAt: request?.created_at || new Date().toISOString(),
     verified: false,
-    pledges: 0,
-    shares: 0,
-    views: 0
+    pledges: request?.pledges || 0,
+    shares: request?.shares || 0,
+    views: request?.views || 0
   }));
 
   // Transform success stories with safe defaults
@@ -212,24 +231,92 @@ const BloodRequestsPage = () => {
     window.location.href = `tel:${request?.contactPhone}`;
   };
 
-  const handleShare = (request) => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${request?.patientName} এর জন্য ${request?.bloodGroup} রক্তের প্রয়োজন`,
-        text: `${request?.hospital}, ${request?.location} এ ${request?.unitsNeeded} ব্যাগ ${request?.bloodGroup} রক্তের জরুরি প্রয়োজন।`,
-        url: window.location?.href
-      });
-    } else {
-      // Fallback for browsers that don't support Web Share API
-      const shareText = `${request?.patientName} এর জন্য ${request?.bloodGroup} রক্তের প্রয়োজন। ${request?.hospital}, ${request?.location}। যোগাযোগ: ${request?.contactPhone}`;
-      navigator.clipboard?.writeText(shareText);
-      alert('শেয়ার লিংক কপি করা হয়েছে!');
+  const handleShare = async (request) => {
+    try {
+      // Update share count in database
+      const { error } = await supabase
+        .from('blood_requests')
+        .update({ shares: (request.shares || 0) + 1 })
+        .eq('id', request.id);
+      
+      if (!error) {
+        // Update local state
+        setRequests(prev => prev.map(r => 
+          r.id === request.id ? { ...r, shares: (r.shares || 0) + 1 } : r
+        ));
+      }
+      
+      const shareUrl = `${window.location.origin}/blood-requests?id=${request.requestId}`;
+      const shareText = `জরুরি সাহায্য প্রয়োজন!
+
+রোগী: ${request?.patientName}
+রক্তের গ্রুপ: ${request?.bloodGroup}
+প্রয়োজন: ${request?.unitsNeeded} ব্যাগ
+হাসপাতাল: ${request?.hospital}
+এলাকা: ${request?.location}
+যোগাযোগ: ${request?.contactPhone}
+
+লিংক: ${shareUrl}`;
+      
+      // Try Web Share API first (mobile)
+      if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+        try {
+          await navigator.share({
+            title: `${request?.patientName} এর জন্য ${request?.bloodGroup} রক্তের প্রয়োজন`,
+            text: shareText,
+            url: shareUrl
+          });
+          return;
+        } catch (err) {
+          console.log('Web Share failed, using fallback');
+        }
+      }
+      
+      // Desktop/fallback: Open share options
+      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
+      const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
+      
+      const choice = confirm('শেয়ার করুন:\n\n1. OK = WhatsApp\n2. Cancel = লিংক কপি করুন');
+      
+      if (choice) {
+        window.open(whatsappUrl, '_blank');
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        alert('শেয়ার লিংক কপি করা হয়েছে! এখন যেকোনো অ্যাপে পেস্ট করুন।');
+      }
+    } catch (error) {
+      console.error('Share failed:', error);
+      // Fallback to copy
+      try {
+        await navigator.clipboard.writeText(shareText);
+        alert('শেয়ার লিংক কপি করা হয়েছে!');
+      } catch (copyError) {
+        console.error('Copy failed:', copyError);
+      }
     }
   };
 
-  const handlePledge = (requestId, pledged) => {
-    console.log(`Request ${requestId} pledged: ${pledged}`);
-    // Here you would update the pledge status in your backend
+  const handlePledge = async (requestId, pledged) => {
+    try {
+      const request = requests.find(r => r.id === requestId);
+      if (!request) return;
+      
+      const newPledgeCount = pledged ? (request.pledges || 0) + 1 : Math.max((request.pledges || 0) - 1, 0);
+      
+      const { error } = await supabase
+        .from('blood_requests')
+        .update({ pledges: newPledgeCount })
+        .eq('id', requestId);
+      
+      if (!error) {
+        setRequests(prev => prev.map(r => 
+          r.id === requestId ? { ...r, pledges: newPledgeCount } : r
+        ));
+      }
+    } catch (error) {
+      console.error('Failed to update pledge:', error);
+    }
   };
 
   const clearFilters = () => {
