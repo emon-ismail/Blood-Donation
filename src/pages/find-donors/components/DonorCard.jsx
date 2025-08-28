@@ -265,22 +265,29 @@ const DonorCard = ({ donor, onContact, onQuickCall, onWhatsApp, isEmergencyMode 
                 </button>
                 
                 {showReviews && (
-                  <div className="mt-3 space-y-3 max-h-40 overflow-y-auto">
+                  <div className="mt-4 space-y-4 max-h-60 overflow-y-auto">
                     {donorRatings.map((rating, index) => (
-                      <div key={index} className="bg-muted/30 rounded-lg p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center space-x-2">
-                            <StarRating rating={rating.rating} size={12} showValue={false} />
-                            <span className="text-xs font-medium">{rating.reviewer_name}</span>
+                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
+                              <Icon name="User" size={14} color="white" />
+                            </div>
+                            <div>
+                              <div className="font-medium text-sm text-text-primary">{rating.reviewer_name}</div>
+                              <StarRating rating={rating.rating} size={14} showValue={false} className="mt-1" />
+                            </div>
                           </div>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-muted-foreground font-bengali">
                             {new Date(rating.created_at).toLocaleDateString('bn-BD')}
                           </span>
                         </div>
                         {rating.comment && (
-                          <p className="text-xs text-muted-foreground font-bengali">
-                            "{rating.comment}"
-                          </p>
+                          <div className="mt-3 pt-3 border-t border-gray-200">
+                            <p className="text-sm text-muted-foreground font-bengali leading-relaxed break-words whitespace-pre-wrap">
+                              "{rating.comment}"
+                            </p>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -323,6 +330,17 @@ const DonorCard = ({ donor, onContact, onQuickCall, onWhatsApp, isEmergencyMode 
                   className="font-bengali"
                 >
                   রেটিং দিন
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  iconName="User"
+                  iconPosition="left"
+                  onClick={() => window.open(`/donor-profile/${donor.id}`, '_blank')}
+                  className="font-bengali"
+                >
+                  প্রোফাইল দেখুন
                 </Button>
               </div>
             </div>

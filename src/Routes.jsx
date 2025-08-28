@@ -10,6 +10,7 @@ import DonorDashboard from './pages/donor-dashboard';
 import DonorLogin from './pages/donor-login';
 import FindDonors from './pages/find-donors';
 import Homepage from './pages/homepage';
+import DonorProfile from './pages/donor-profile';
 import { LanguageProvider } from './contexts/LanguageContext';
 
 const Routes = () => {
@@ -27,6 +28,7 @@ const Routes = () => {
         <Route path="/donor-login" element={<DonorLogin />} />
         <Route path="/donor-dashboard" element={<DonorDashboard />} />
         <Route path="/find-donors" element={<FindDonors />} />
+        <Route path="/donor-profile/:donorId" element={<DonorProfile />} />
         <Route path="/homepage" element={<Homepage />} />
         <Route path="*" element={<NotFound />} />
         </RouterRoutes>

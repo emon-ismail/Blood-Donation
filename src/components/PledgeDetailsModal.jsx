@@ -27,12 +27,17 @@ const PledgeDetailsModal = ({ isOpen, onClose, pledges, requestInfo }) => {
             <div className="space-y-3">
               {pledges.map((pledge, index) => (
                 <div key={pledge.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 flex-1">
                     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
                       <Icon name="User" size={16} color="white" />
                     </div>
-                    <div>
-                      <p className="font-medium text-sm">{pledge.donor_name}</p>
+                    <div className="flex-1">
+                      <button
+                        onClick={() => window.open(`/donor-profile/${pledge.donor_id}`, '_blank')}
+                        className="font-medium text-sm text-primary hover:text-primary-dark transition-colors text-left"
+                      >
+                        {pledge.donor_name}
+                      </button>
                       <p className="text-xs text-gray-500 font-bengali">
                         {new Date(pledge.created_at).toLocaleDateString('bn-BD')}
                       </p>
