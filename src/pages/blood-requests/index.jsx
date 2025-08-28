@@ -10,6 +10,8 @@ import RequestCard from './components/RequestCard';
 import FilterPanel from './components/FilterPanel';
 import StatsPanel from './components/StatsPanel';
 import SuccessStories from './components/SuccessStories';
+import PledgeDetailsModal from '../../components/PledgeDetailsModal';
+
 
 const BloodRequestsPage = () => {
   const navigate = useNavigate();
@@ -32,9 +34,31 @@ const BloodRequestsPage = () => {
     verifiedOnly: false,
     timeRange: ''
   });
+  const [showPledgeModal, setShowPledgeModal] = useState(false);
+  const [selectedRequestPledges, setSelectedRequestPledges] = useState([]);
+  const [selectedRequestInfo, setSelectedRequestInfo] = useState(null);
+
 
   useEffect(() => {
     loadData();
+    // Check if there's a specific request ID in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestId = urlParams.get('id');
+    if (requestId) {
+      // Scroll to specific request after data loads
+      setTimeout(() => {
+        const element = document.getElementById(`request-${requestId}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.style.border = '2px solid #ef4444';
+          element.style.boxShadow = '0 0 20px rgba(239, 68, 68, 0.3)';
+          setTimeout(() => {
+            element.style.border = '';
+            element.style.boxShadow = '';
+          }, 3000);
+        }
+      }, 1000);
+    }
     // Track page views for all visible requests
     trackPageViews();
   }, []);
@@ -64,6 +88,19 @@ const BloodRequestsPage = () => {
         .from('blood_requests')
         .select('*')
         .in('status', ['active', 'verified']);
+      
+      // Get current user data from AuthContext
+      const donorUser = JSON.parse(localStorage.getItem('donor_user') || 'null');
+      let donorData = null;
+      
+      if (donorUser) {
+        // Get donor data from database
+        const { data } = await supabase
+          .from('donors')
+          .select('*')
+          .or(`email.eq.${donorUser.email},mobile.eq.${donorUser.email}`);
+        donorData = data?.[0] || null;
+      }
 
       // Apply blood group filters
       if (currentFilters.bloodGroups?.length > 0) {
@@ -86,8 +123,24 @@ const BloodRequestsPage = () => {
       }
 
       const { data: requestsData } = await query.order('created_at', { ascending: false });
+      
+      // If donor is logged in, check their pledges
+      let userPledges = [];
+      if (donorData) {
+        const { data: pledgeData } = await supabase
+          .from('blood_pledges')
+          .select('request_id')
+          .eq('donor_id', donorData.id);
+        userPledges = pledgeData?.map(p => p.request_id) || [];
+      }
+      
+      // Add user pledge status to requests
+      const requestsWithPledgeStatus = (requestsData || []).map(request => ({
+        ...request,
+        userPledged: userPledges.includes(request.request_id) // Use request_id not id
+      }));
 
-      setRequests(requestsData || []);
+      setRequests(requestsWithPledgeStatus);
       setTotalItems(requestsData?.length || 0);
       setSuccessStories([]);
       
@@ -131,7 +184,8 @@ const BloodRequestsPage = () => {
     verified: false,
     pledges: request?.pledges || 0,
     shares: request?.shares || 0,
-    views: request?.views || 0
+    views: request?.views || 0,
+    userPledged: request?.userPledged || false
   }));
 
   // Transform success stories with safe defaults
@@ -231,6 +285,26 @@ const BloodRequestsPage = () => {
     window.location.href = `tel:${request?.contactPhone}`;
   };
 
+  const handleShowPledges = async (request) => {
+    try {
+      const { data: pledges, error } = await supabase
+        .from('blood_pledges')
+        .select('*')
+        .eq('request_id', request.requestId) // Use requestId from display object
+        .order('created_at', { ascending: false });
+      
+      console.log('Pledges for request:', request.requestId, pledges);
+      
+      if (!error) {
+        setSelectedRequestPledges(pledges || []);
+        setSelectedRequestInfo(request);
+        setShowPledgeModal(true);
+      }
+    } catch (error) {
+      console.error('Failed to load pledges:', error);
+    }
+  };
+
   const handleShare = async (request) => {
     try {
       // Update share count in database
@@ -258,8 +332,8 @@ const BloodRequestsPage = () => {
 
 লিংক: ${shareUrl}`;
       
-      // Try Web Share API first (mobile)
-      if (navigator.share && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      // Always use native share if available
+      if (navigator.share) {
         try {
           await navigator.share({
             title: `${request?.patientName} এর জন্য ${request?.bloodGroup} রক্তের প্রয়োজন`,
@@ -268,54 +342,122 @@ const BloodRequestsPage = () => {
           });
           return;
         } catch (err) {
-          console.log('Web Share failed, using fallback');
+          if (err.name !== 'AbortError') {
+            console.log('Web Share failed, using fallback');
+          } else {
+            return; // User cancelled
+          }
         }
       }
       
-      // Desktop/fallback: Open share options
-      const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(shareText)}`;
-      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}&quote=${encodeURIComponent(shareText)}`;
-      const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(shareText)}`;
-      
-      const choice = confirm('শেয়ার করুন:\n\n1. OK = WhatsApp\n2. Cancel = লিংক কপি করুন');
-      
-      if (choice) {
-        window.open(whatsappUrl, '_blank');
-      } else {
-        await navigator.clipboard.writeText(shareText);
-        alert('শেয়ার লিংক কপি করা হয়েছে! এখন যেকোনো অ্যাপে পেস্ট করুন।');
-      }
+      // Fallback: Copy to clipboard
+      await navigator.clipboard.writeText(shareText);
+      alert('শেয়ার লিংক কপি করা হয়েছে! এখন যেকোনো অ্যাপে পেস্ট করুন।');
     } catch (error) {
       console.error('Share failed:', error);
-      // Fallback to copy
-      try {
-        await navigator.clipboard.writeText(shareText);
-        alert('শেয়ার লিংক কপি করা হয়েছে!');
-      } catch (copyError) {
-        console.error('Copy failed:', copyError);
-      }
     }
   };
 
   const handlePledge = async (requestId, pledged) => {
+    // Check correct auth key from AuthContext
+    const donorUser = JSON.parse(localStorage.getItem('donor_user') || 'null');
+    
+    console.log('Auth check:', { donorUser });
+    
+    if (!donorUser) {
+      // Store current page for return navigation
+      const currentUrl = window.location.href;
+      localStorage.setItem('returnUrl', currentUrl);
+      
+      alert('সাহায্য করতে প্রথমে লগইন করুন');
+      window.location.href = '/donor-dashboard';
+      return false;
+    }
+    
+    // User is logged in, now get their donor data from database
+    const { data: donorData, error } = await supabase
+      .from('donors')
+      .select('*')
+      .or(`email.eq.${donorUser.email},mobile.eq.${donorUser.email}`);
+    
+    console.log('Donor lookup result:', { donorData, error, userEmail: donorUser.email });
+    
+    if (error || !donorData || donorData.length === 0) {
+      // Store current page for return navigation
+      const currentUrl = window.location.href;
+      localStorage.setItem('returnUrl', currentUrl);
+      
+      alert('আপনি এখনো রক্তদাতা হিসেবে নিবন্ধিত নন। প্রথমে নিবন্ধন করুন।');
+      window.location.href = '/donor-registration';
+      return false;
+    }
+    
+    const actualDonorData = donorData[0];
+
     try {
       const request = requests.find(r => r.id === requestId);
       if (!request) return;
       
-      const newPledgeCount = pledged ? (request.pledges || 0) + 1 : Math.max((request.pledges || 0) - 1, 0);
+      if (pledged) {
+        // Add pledge record using request.request_id (string) instead of request.id (UUID)
+        const request = requests.find(r => r.id === requestId);
+        console.log('Donor data for pledge:', actualDonorData);
+        
+        const { error: pledgeError } = await supabase
+          .from('blood_pledges')
+          .insert({
+            request_id: request.request_id, // Use the BR123456 format ID
+            donor_id: actualDonorData.donor_id || actualDonorData.id, // Try donor_id first, fallback to id
+            donor_name: actualDonorData.full_name,
+            donor_phone: actualDonorData.mobile,
+            created_at: new Date().toISOString()
+          });
+        
+        if (pledgeError && pledgeError.code !== '23505') { // Ignore duplicate
+          console.error('Pledge insert error:', pledgeError);
+          throw pledgeError;
+        }
+      } else {
+        // Remove pledge record
+        const request = requests.find(r => r.id === requestId);
+        await supabase
+          .from('blood_pledges')
+          .delete()
+          .eq('request_id', request.request_id)
+          .eq('donor_id', actualDonorData.donor_id || actualDonorData.id);
+      }
       
-      const { error } = await supabase
+      // Update pledge count
+      const foundRequest = requests.find(r => r.id === requestId);
+      const { data: pledgeCount } = await supabase
+        .from('blood_pledges')
+        .select('id')
+        .eq('request_id', foundRequest.request_id);
+      
+      const newPledgeCount = pledgeCount?.length || 0;
+      
+      await supabase
         .from('blood_requests')
         .update({ pledges: newPledgeCount })
-        .eq('id', requestId);
+        .eq('request_id', foundRequest.request_id);
+        
+      console.log('Request data:', { 
+        requestId, 
+        foundRequestId: foundRequest.id, 
+        foundRequestRequestId: foundRequest.request_id,
+        newPledgeCount 
+      });
       
-      if (!error) {
-        setRequests(prev => prev.map(r => 
-          r.id === requestId ? { ...r, pledges: newPledgeCount } : r
-        ));
-      }
+      setRequests(prev => prev.map(r => 
+        r.id === requestId ? { ...r, pledges: newPledgeCount, userPledged: pledged } : r
+      ));
+      
+      return true; // Return success
+      
     } catch (error) {
       console.error('Failed to update pledge:', error);
+      alert(`সাহায্য করতে সমস্যা: ${error.message}`);
+      return false; // Return failure
     }
   };
 
@@ -338,7 +480,7 @@ const BloodRequestsPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+        <Header />
       <main className="pt-16">
         {/* Hero Section */}
         <section className="bg-gradient-to-r from-primary to-secondary text-white py-12">
@@ -510,13 +652,15 @@ const BloodRequestsPage = () => {
                     </div>
                   ) : sortedRequests?.length > 0 ? (
                     sortedRequests?.map((request) => (
-                      <RequestCard
-                        key={request?.id}
-                        request={request}
-                        onContact={handleContact}
-                        onShare={handleShare}
-                        onPledge={handlePledge}
-                      />
+                      <div key={request?.id} id={`request-${request?.requestId}`}>
+                        <RequestCard
+                          request={request}
+                          onContact={handleContact}
+                          onShare={handleShare}
+                          onPledge={handlePledge}
+                          onShowPledges={handleShowPledges}
+                        />
+                      </div>
                     ))
                   ) : (
                     <div className="text-center py-12">
@@ -671,6 +815,13 @@ const BloodRequestsPage = () => {
           </div>
         </div>
       </footer>
+      
+      <PledgeDetailsModal 
+        isOpen={showPledgeModal}
+        onClose={() => setShowPledgeModal(false)}
+        pledges={selectedRequestPledges}
+        requestInfo={selectedRequestInfo}
+      />
     </div>
   );
 };

@@ -159,8 +159,16 @@ const DonorRegistration = () => {
       console.log('Login result:', loginResult);
       
       if (loginResult.success) {
-        console.log('Login successful, redirecting to dashboard');
-        navigate('/donor-dashboard');
+        console.log('Login successful, checking for return URL');
+        
+        // Check for return URL
+        const returnUrl = localStorage.getItem('returnUrl');
+        if (returnUrl) {
+          localStorage.removeItem('returnUrl');
+          window.location.href = returnUrl;
+        } else {
+          navigate('/donor-dashboard');
+        }
       } else {
         console.log('Login failed:', loginResult.error);
         // If auto-login fails, still redirect to login page

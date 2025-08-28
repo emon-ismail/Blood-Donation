@@ -246,6 +246,17 @@ const DonorDashboard = () => {
       navigate('/donor-login');
       return;
     }
+    
+    // Check for return URL after successful login (only if donor data is loaded)
+    const returnUrl = localStorage.getItem('returnUrl');
+    if (returnUrl && user?.email && localDonorData) {
+      // Clear the return URL
+      localStorage.removeItem('returnUrl');
+      // Navigate back after a short delay to ensure dashboard loads
+      setTimeout(() => {
+        window.location.href = returnUrl;
+      }, 2000);
+    }
 
     const loadDonorData = async () => {
       try {

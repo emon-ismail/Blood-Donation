@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Icon from '../../../components/AppIcon';
 import Button from '../../../components/ui/Button';
 
-const RequestCard = ({ request, onContact, onShare, onPledge }) => {
+const RequestCard = ({ request, onContact, onShare, onPledge, onShowPledges }) => {
   const [timeLeft, setTimeLeft] = useState('');
-  const [pledged, setPledged] = useState(false);
+  const [pledged, setPledged] = useState(request?.userPledged || false);
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -67,9 +67,13 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
 
   const urgencyConfig = getUrgencyConfig(request?.urgencyLevel);
 
-  const handlePledge = () => {
-    setPledged(!pledged);
-    onPledge(request?.id, !pledged);
+  const handlePledge = async () => {
+    // Call parent function and wait for result
+    const success = await onPledge(request?.id, !pledged);
+    // Only update state if the action was successful
+    if (success === true) {
+      setPledged(!pledged);
+    }
   };
 
   const formatDate = (dateString) => {
@@ -188,10 +192,13 @@ const RequestCard = ({ request, onContact, onShare, onPledge }) => {
       {/* Response Stats */}
       <div className="flex items-center justify-between mb-4 text-sm">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-1 text-green-600">
+          <button 
+            onClick={() => onShowPledges?.(request)}
+            className="flex items-center space-x-1 text-green-600 hover:text-green-700 transition-colors cursor-pointer"
+          >
             <Icon name="Users" size={14} />
             <span className="font-bengali">{request?.pledges || 0} জন সাহায্য করবেন</span>
-          </div>
+          </button>
           <div className="flex items-center space-x-1 text-blue-600">
             <Icon name="Share2" size={14} />
             <span className="font-bengali">{request?.shares || 0} বার শেয়ার</span>
