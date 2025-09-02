@@ -1,0 +1,47 @@
+name: Keep Supabase Alive
+
+on:
+  schedule:
+    # Run every 4 hours
+    - cron: '0 */4 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Ping Netlify Function
+        run: |
+          echo "🔄 Pinging Netlify function to keep Supabase alive..."
+          
+          response=$(curl -s -w "%{http_code}" -o /tmp/response.json https://bloood.netlify.app/.netlify/functions/keep-alive)
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Keep-alive ping successful"
+            cat /tmp/response.json
+          else
+            echo "❌ Keep-alive ping failed with status: $response"
+            cat /tmp/response.json
+            exit 1
+          fi
+
+      - name: Ping Supabase Directly
+        env:
+          SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
+        run: |
+          echo "🔄 Direct Supabase ping..."
+          
+          response=$(curl -s -w "%{http_code}" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            "$SUPABASE_URL/rest/v1/donors?select=id&limit=1")
+          
+          echo "📊 Supabase response: $response"
+
+      - name: Log Success
+        run: |
+          echo "🎉 Keep-alive workflow completed successfully at $(date)"
+          echo "Next run scheduled in 4 hours"

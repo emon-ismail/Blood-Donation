@@ -87,11 +87,7 @@ const AdminLogin = ({ onLogin }) => {
           </Button>
         </form>
 
-        <div className="mt-6 pt-6 border-t border-border text-center">
-          <p className="text-xs text-muted-foreground font-bengali">
-            Demo: username: admin, password: lifelink2024
-          </p>
-        </div>
+
       </div>
     </div>
   );
