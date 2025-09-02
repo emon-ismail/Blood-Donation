@@ -10,11 +10,5 @@
   to = "/index.html"
   status = 200
 
-# Environment variables for functions
 [build.environment]
   NODE_VERSION = "18"
-
-# Keep-alive function settings
-[[functions]]
-  path = "/.netlify/functions/keep-alive"
-  included_files = ["netlify/functions/keep-alive.js"]
