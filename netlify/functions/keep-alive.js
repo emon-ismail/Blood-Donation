@@ -2,11 +2,22 @@ const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event, context) => {
   try {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ 
+          success: false, 
+          error: 'Supabase environment variables not configured',
+          timestamp: new Date().toISOString()
+        })
+      };
+    }
+
     // Initialize Supabase client
-    const supabase = createClient(
-      process.env.VITE_SUPABASE_URL,
-      process.env.VITE_SUPABASE_ANON_KEY
-    );
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Simple ping query to keep database active
     const { data, error } = await supabase
